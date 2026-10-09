@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="vi">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mô phỏng quản lý quảng cáo — kiểm thử cục bộ</title>
+<style>
+  body { font: 15px Arial, sans-serif; margin: 0; background: #eef2f7; color: #233149; }
+  main { margin: 45px; width: min(740px, calc(100vw - 440px)); }
+  .notice { padding: 10px 16px; background: #fff0cb; border-radius: 8px; margin-bottom: 20px; }
+  #editor { background: white; padding: 25px; border-radius: 12px; border: 1px solid #d4dfec; }
+  h1 { font-size: 24px; margin-top: 0; }
+  button, input { font: inherit; padding: 9px 12px; border: 1px solid #b9c8da; border-radius: 7px; background: white; }
+  button { cursor: pointer; }
+  #list { margin: 20px 0; max-height: 400px; overflow: auto; }
+  .ad-row { display: flex; gap: 10px; margin: 7px 0; align-items: center; }
+  .ad-row input { width: 140px; }
+  .badge { color: #64748b; font-size: 13px; }
+  .duration { font: 20px monospace; }
+  #saved { color: #1967d2; margin-left: 8px; }
+</style>
+<main>
+  <div class="notice">Trang mô phỏng để kiểm thử extension, không kết nối YouTube.</div>
+  <section id="editor" role="dialog" aria-label="Quản lý vị trí quảng cáo">
+    <h1>Quản lý vị trí quảng cáo</h1>
+    <p>Thời lượng: <span class="duration">10:00</span></p>
+    <label for="playhead">Vị trí phát</label> <input id="playhead" value="0:00:00">
+    <button id="insert">+ Chèn vị trí quảng cáo</button>
+    <div id="list"></div>
+    <p><label><input id="automatic" type="checkbox" checked> Vị trí quảng cáo tự động</label></p>
+    <button id="save">Lưu</button><span id="saved">Chưa lưu</span>
+  </section>
+</main>
+<script>
+  globalThis.fixture = { saves: 0, deletes: 0, clicks: 0, sequence: 0, delay: 0, wrongTime: false, rerender: false };
+  function addRow(time, old = false) {
+    const row = document.createElement('div');
+    row.className = 'ad-row';
+    row.dataset.id = String(++fixture.sequence);
+    row.innerHTML = '<input aria-label="Thời gian bắt đầu quảng cáo"><button aria-label="Xóa vị trí quảng cáo">Xóa</button><span class="badge"></span>';
+    row.querySelector('input').value = time;
+    if (old) row.querySelector('input').addEventListener('input', () => { fixture.oldEdits = (fixture.oldEdits || 0) + 1; });
+    if (!old && fixture.commitOnFocusout) {
+      const field = row.querySelector('input');
+      let committed = time;
+      let pending = time;
+      field.addEventListener('input', () => { pending = field.value; });
+      field.addEventListener('change', () => {
+        setTimeout(() => { field.value = committed; }, 30);
+      });
+      field.addEventListener('focusout', () => { committed = pending; });
+    }
+    row.querySelector('.badge').textContent = old ? 'Điểm có sẵn' : 'Điểm vừa thêm';
+    row.querySelector('button').addEventListener('click', () => { fixture.deletes++; row.remove(); });
+    document.getElementById('list').append(row);
+    return row;
+  }
+  addRow('0:20:00', true);
+  addRow('3:00:00', true);
+  addRow('9:40:00', true);
+  document.getElementById('insert').addEventListener('click', () => {
+    fixture.clicks++;
+    if (fixture.requireFocusForInsert && !document.hasFocus()) return;
+    const capturedTime = Number.isFinite(fixture.timelineSeconds) ? MidrollPlanner.formatStudioTime(fixture.timelineSeconds, '0:00:00') : document.getElementById('playhead')?.value || '0:00:00';
+    const apply = () => {
+      if (fixture.rerender) {
+        const values = [...document.querySelectorAll('.ad-row input')].map((input) => input.value);
+        document.getElementById('list').replaceChildren();
+        values.forEach((time) => addRow(time, true));
+      }
+      const provisional = fixture.provisionalTime;
+      const row = addRow(provisional ?? (fixture.wrongTime ? '0:00:00' : capturedTime));
+      if (provisional !== undefined && fixture.settleDelay) {
+        setTimeout(() => {
+          const entries = [...document.querySelectorAll('.ad-row input')].map((input) => input.value);
+          entries[entries.length - 1] = capturedTime;
+          document.getElementById('list').replaceChildren();
+          entries.forEach((time, index) => addRow(time, index < entries.length - 1));
+        }, fixture.settleDelay);
+      }
+      if (fixture.wrongTime) row.querySelector('input').addEventListener('change', () => { row.querySelector('input').value = '0:00:00'; });
+    };
+    if (fixture.delay) setTimeout(apply, fixture.delay);
+    else if (fixture.animationCommit) requestAnimationFrame(apply);
+    else apply();
+  });
+  document.getElementById('save').addEventListener('click', () => { fixture.saves++; document.getElementById('saved').textContent = 'Đã lưu'; });
+  // Mock Chrome APIs on the local fixture, with the production MAIN reader.
+  // Background security and world selection are tested separately in Node.
+  globalThis.chrome = {
+    runtime: {
+      onMessage: { addListener(fn) { fixture.messageListener = fn; }, removeListener(fn) { if (fixture.messageListener === fn) fixture.messageListener = null; } },
+      sendMessage: async (message) => {
+      if (message.type.startsWith('MIDROLL_BACKGROUND_')) {
+        fixture.backgroundRequests = [...(fixture.backgroundRequests || []), message.type];
+        if (globalThis.backgroundMessage) return await backgroundMessage(message);
+        if (message.type === 'MIDROLL_BACKGROUND_START') {
+          if (fixture.backgroundStartError) return { ok: false, error: fixture.backgroundStartError };
+          fixture.backgroundRunId = message.runId;
+          return { ok: true, runId: message.runId };
+        }
+        if (message.type === 'MIDROLL_BACKGROUND_STOP') fixture.backgroundRunId = null;
+        return { ok: true };
+      }
+      if (message.type === 'MIDROLL_SEEK_PLAYHEAD') return MidrollSeekPagePlayhead(message.videoId, message.seconds, message.duration, message.editorToken);
+      fixture.durationReads = (fixture.durationReads || 0) + 1;
+      if (fixture.readerResponse) return fixture.readerResponse;
+      return MidrollReadPageDuration(location.pathname.split('/')[2]);
+    } },
+    storage: { local: { get: async (defaults) => ({ ...defaults, ...(fixture.savedSettings || {}) }), set: async (settings) => { fixture.savedSettings = { ...fixture.savedSettings, ...settings }; } } }
+  };
+  const query = new URL(location.href).searchParams;
+  if (query.has('metadata') || query.has('delayed')) {
+    document.querySelector('.duration').remove();
+    const install = () => {
+      const player = document.createElement('div');
+      player.id = 'movie_player';
+      player.getVideoData = () => ({ video_id: 'test123' });
+      player.getDuration = () => Number(query.get('metadata') || query.get('delayed'));
+      document.body.prepend(player);
+    };
+    if (query.has('delayed')) setTimeout(install, 600); else install();
+  }
+</script>
+<script src="/extension/duration-reader.js"></script>
+<script src="/extension/playhead-controller.js"></script>
+<script src="/extension/planner.js"></script>
+<script src="/extension/cleanup.js"></script>
+<script src="/extension/wait.js"></script>
+<script src="/extension/studio.js"></script>
+<script src="/extension/runner.js"></script>
+<script src="/extension/background-client.js"></script>
+<script src="/extension/error-copy.js"></script>
+<script src="/extension/content.js"></script>
+</html>

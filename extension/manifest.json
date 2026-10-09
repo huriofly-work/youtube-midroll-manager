@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Chèn điểm quảng cáo YouTube",
+  "version": "0.1.14",
+  "description": "Chèn theo khoảng cách; dọn điểm thủ công có cảnh báo, Đang xem xét hoặc quá gần. Giữ quảng cáo tự động; bạn tự lưu.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "debugger"
+  ],
+  "minimum_chrome_version": "118",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "Chèn điểm quảng cáo YouTube",
+    "default_popup": "popup.html"
+  }
+}

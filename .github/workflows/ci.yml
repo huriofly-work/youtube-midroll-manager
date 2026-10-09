@@ -1,0 +1,31 @@
+name: Local fixture checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install test dependencies
+        run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Install isolated browser
+        run: npx playwright install --with-deps chromium
+      - name: Check algorithms and lifecycle
+        run: npm test
+      - name: Check insertion fixtures
+        run: npm run test:browser
+      - name: Check cleanup fixtures
+        run: npm run test:cleanup
+      - name: Check popup fixtures
+        run: npm run test:popup

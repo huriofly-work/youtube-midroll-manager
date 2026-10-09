@@ -1,0 +1,20 @@
+node_modules/
+playwright-report/
+test-results/
+__pycache__/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+
+# Installable ZIPs are published as GitHub Release assets.
+# Keep the three archived inputs required by the performance suites.
+release/*
+!release/Chen-quang-cao-YouTube-v0.1.6.zip
+!release/Chen-quang-cao-YouTube-v0.1.10.zip
+!release/Chen-quang-cao-YouTube-v0.1.13.zip
+
+# Local publication notes and checksum staging files.
+.publish/

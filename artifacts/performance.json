@@ -1,0 +1,289 @@
+{
+  "environment": "Local headless Chrome, mocked Studio/player/extension messaging, archived 0.1.6 versus current source. No real Studio speed claim.",
+  "metrics": [
+    {
+      "variant": "baseline",
+      "rows": 20,
+      "snapshotMedianMs": 0.7,
+      "insertionMs": 7378.1,
+      "msPerPoint": 1475.6,
+      "stages": [
+        {
+          "stableFor": 300,
+          "elapsedMs": 334.7
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 434.1
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 436.3
+        },
+        {
+          "stableFor": 300,
+          "elapsedMs": 321.8
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 435.1
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 435.3
+        },
+        {
+          "stableFor": 300,
+          "elapsedMs": 323.1
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 434.3
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 435.5
+        },
+        {
+          "stableFor": 300,
+          "elapsedMs": 320.8
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 436.1
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 433.7
+        },
+        {
+          "stableFor": 300,
+          "elapsedMs": 318.2
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 436.3
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 429.8
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 436.8
+        }
+      ],
+      "inserted": 5,
+      "preserved": true,
+      "finalCount": 25,
+      "clicks": 5,
+      "oldEdits": 0,
+      "saves": 0,
+      "deletes": 0,
+      "automatic": true
+    },
+    {
+      "variant": "current",
+      "rows": 20,
+      "snapshotMedianMs": 0.6,
+      "insertionMs": 5739.3,
+      "msPerPoint": 1147.9,
+      "stages": [
+        {
+          "stableFor": 400,
+          "elapsedMs": 431.9
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 434.7
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 435.7
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 435.4
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 436
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 435.4
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 435.9
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 432.2
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 435.7
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 435
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 436.2
+        }
+      ],
+      "inserted": 5,
+      "preserved": true,
+      "finalCount": 25,
+      "clicks": 5,
+      "oldEdits": 0,
+      "saves": 0,
+      "deletes": 0,
+      "automatic": true
+    },
+    {
+      "variant": "baseline",
+      "rows": 200,
+      "snapshotMedianMs": 20.4,
+      "insertionMs": 8781.8,
+      "msPerPoint": 1756.4,
+      "stages": [
+        {
+          "stableFor": 300,
+          "elapsedMs": 318.1
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 506.7
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 524.8
+        },
+        {
+          "stableFor": 300,
+          "elapsedMs": 326.3
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 524.1
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 507.4
+        },
+        {
+          "stableFor": 300,
+          "elapsedMs": 319.5
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 518.1
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 510
+        },
+        {
+          "stableFor": 300,
+          "elapsedMs": 326.8
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 535.1
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 533.6
+        },
+        {
+          "stableFor": 300,
+          "elapsedMs": 328.4
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 512.7
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 489.6
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 499.4
+        }
+      ],
+      "inserted": 5,
+      "preserved": true,
+      "finalCount": 205,
+      "clicks": 5,
+      "oldEdits": 0,
+      "saves": 0,
+      "deletes": 0,
+      "automatic": true
+    },
+    {
+      "variant": "current",
+      "rows": 200,
+      "snapshotMedianMs": 4.6,
+      "insertionMs": 5973.4,
+      "msPerPoint": 1194.7,
+      "stages": [
+        {
+          "stableFor": 400,
+          "elapsedMs": 439.4
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 446.1
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 450.7
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 448.2
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 446.9
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 446.9
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 438.2
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 445.8
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 447.1
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 448
+        },
+        {
+          "stableFor": 400,
+          "elapsedMs": 433.8
+        }
+      ],
+      "inserted": 5,
+      "preserved": true,
+      "finalCount": 205,
+      "clicks": 5,
+      "oldEdits": 0,
+      "saves": 0,
+      "deletes": 0,
+      "automatic": true
+    }
+  ]
+}

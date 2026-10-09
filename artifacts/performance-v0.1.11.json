@@ -1,0 +1,151 @@
+{
+  "environment": "Local headless Chrome, mocked Studio/player/messaging; full list rerenders. Archived 0.1.10 vs current. No real Studio speed claim.",
+  "metrics": [
+    {
+      "variant": "baseline",
+      "rows": 20,
+      "operation": "insert",
+      "elapsedMs": 5683.2,
+      "msPerPoint": 1136.6,
+      "changed": 5,
+      "preserved": true,
+      "finalCount": 25,
+      "clicks": 5,
+      "deletes": 0,
+      "saves": 0,
+      "oldEdits": 0,
+      "automatic": true
+    },
+    {
+      "variant": "current",
+      "rows": 20,
+      "operation": "insert",
+      "elapsedMs": 3559.2,
+      "msPerPoint": 711.8,
+      "changed": 5,
+      "preserved": true,
+      "finalCount": 25,
+      "clicks": 5,
+      "deletes": 0,
+      "saves": 0,
+      "oldEdits": 0,
+      "automatic": true
+    },
+    {
+      "variant": "baseline",
+      "rows": 20,
+      "operation": "cleanup",
+      "elapsedMs": 9342.2,
+      "msPerPoint": 467.1,
+      "snapshotMedianMs": 3.6,
+      "changed": 20,
+      "preserved": true,
+      "finalCount": 20,
+      "clicks": 0,
+      "deletes": 20,
+      "saves": 0,
+      "oldEdits": 0,
+      "automatic": true
+    },
+    {
+      "variant": "current",
+      "rows": 20,
+      "operation": "cleanup",
+      "elapsedMs": 2291.7,
+      "msPerPoint": 114.6,
+      "snapshotMedianMs": 3.4,
+      "changed": 20,
+      "preserved": true,
+      "finalCount": 20,
+      "clicks": 0,
+      "deletes": 20,
+      "saves": 0,
+      "oldEdits": 0,
+      "automatic": true
+    },
+    {
+      "variant": "baseline",
+      "rows": 200,
+      "operation": "insert",
+      "elapsedMs": 5952.1,
+      "msPerPoint": 1190.4,
+      "changed": 5,
+      "preserved": true,
+      "finalCount": 205,
+      "clicks": 5,
+      "deletes": 0,
+      "saves": 0,
+      "oldEdits": 0,
+      "automatic": true
+    },
+    {
+      "variant": "current",
+      "rows": 200,
+      "operation": "insert",
+      "elapsedMs": 3767.2,
+      "msPerPoint": 753.4,
+      "changed": 5,
+      "preserved": true,
+      "finalCount": 205,
+      "clicks": 5,
+      "deletes": 0,
+      "saves": 0,
+      "oldEdits": 0,
+      "automatic": true
+    },
+    {
+      "variant": "baseline",
+      "rows": 200,
+      "operation": "cleanup",
+      "elapsedMs": 11466.1,
+      "msPerPoint": 573.3,
+      "snapshotMedianMs": 17.3,
+      "changed": 20,
+      "preserved": true,
+      "finalCount": 200,
+      "clicks": 0,
+      "deletes": 20,
+      "saves": 0,
+      "oldEdits": 0,
+      "automatic": true
+    },
+    {
+      "variant": "current",
+      "rows": 200,
+      "operation": "cleanup",
+      "elapsedMs": 3355.1,
+      "msPerPoint": 167.8,
+      "snapshotMedianMs": 16.5,
+      "changed": 20,
+      "preserved": true,
+      "finalCount": 200,
+      "clicks": 0,
+      "deletes": 20,
+      "saves": 0,
+      "oldEdits": 0,
+      "automatic": true
+    }
+  ],
+  "comparisons": [
+    {
+      "operation": "insert",
+      "rows": 20,
+      "reductionPercent": 37.4
+    },
+    {
+      "operation": "cleanup",
+      "rows": 20,
+      "reductionPercent": 75.5
+    },
+    {
+      "operation": "insert",
+      "rows": 200,
+      "reductionPercent": 36.7
+    },
+    {
+      "operation": "cleanup",
+      "rows": 200,
+      "reductionPercent": 70.7
+    }
+  ]
+}
