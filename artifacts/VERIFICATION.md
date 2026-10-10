@@ -1,3 +1,16 @@
+# Kiểm chứng bản 0.1.17
+
+Mở rộng bảng hướng dẫn popup lên 460 px; tăng cỡ chữ và khoảng cách. Bỏ max-width theo viewport, đặt chiều rộng phần tử gốc để không phụ thuộc vùng hiển thị nhỏ khi khởi tạo. Bảng chèn/dọn trong Studio chỉ đổi số phiên bản.
+
+- 92 kiểm thử logic và 7 popup browser đạt trên Chrome headless/profile tạm với Chrome API mô phỏng.
+- Kiểm tra hướng dẫn ngoài Studio, trang danh sách Studio, mở bảng thành công, lỗi và thử lại, thiếu background, thông báo dài không tràn ngang. Bước hướng dẫn và nút Mở Studio nằm trong vùng 460×600. Với viewport ban đầu 25 px, phần tử gốc và body vẫn rộng 460 px; trở về 460 px không tràn ngang.
+- Đã xem ảnh popup-guidance-v0.1.17.png và popup-error-v0.1.17.png. Ảnh v0.1.16 được giữ nguyên.
+- ZIP 17 tệp, 46,259 byte; CRC và từng byte khớp nguồn. SHA-256: `7a6f955ad65a30e2491b207feff32a346ce26ea40015193474ddf7c634066653`.
+
+Chưa kiểm chứng trực tiếp cửa sổ toolbar popup trên Chrome đang đăng nhập của người dùng. Không thay thuật toán, quyền, bảo vệ điểm tự động/chưa rõ loại hoặc việc tự Lưu. Các phần dưới là lịch sử.
+
+---
+
 # Kiểm chứng bản 0.1.16
 
 Thiết kế lại toàn bộ giao diện popup và bảng trong Studio, đồng nhất các ô nhập trực tiếp số giây và bỏ nút cộng/trừ. Thuật toán và cơ chế chạy nền giữ nguyên.

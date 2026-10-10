@@ -8,7 +8,7 @@
     return;
   }
   const P = globalThis.MidrollPlanner;
-  const VERSION = "0.1.16";
+  const VERSION = "0.1.17";
   const host = document.createElement("div");
   globalThis.MidrollPanelHost = host;
   host.id = HOST_ID;

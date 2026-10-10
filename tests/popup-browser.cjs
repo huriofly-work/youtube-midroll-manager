@@ -16,7 +16,7 @@ const { chromium } = require('playwright');
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
   const browser = await chromium.launch({ headless: true, ...(process.env.CHROME_TEST_PATH ? { executablePath: process.env.CHROME_TEST_PATH } : {}) });
-  const page = await browser.newPage({ viewport: { width: 380, height: 650 } });
+  const page = await browser.newPage({ viewport: { width: 460, height: 600 } });
   const errors = []; page.on('pageerror', (error) => errors.push(error.message));
   const version = JSON.parse(await fs.readFile(path.join(root, 'extension/manifest.json'), 'utf8')).version;
   await page.addInitScript((version) => {
@@ -48,6 +48,11 @@ const { chromium } = require('playwright');
       assert.deepEqual(await page.evaluate(() => fixture.messages), [{ type: 'MIDROLL_OPEN_PANEL' }]);
       await fs.mkdir(path.join(root, 'artifacts'), { recursive: true });
       await page.screenshot({ path: path.join(root, 'artifacts/popup-preview.png') });
+      await page.screenshot({ path: path.join(root, `artifacts/popup-guidance-v${version}.png`) });
+      assert.equal(await page.evaluate(() => document.body.getBoundingClientRect().width), 460);
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      const button = await page.locator('a').boundingBox();
+      assert.ok(button.y + button.height <= 600, 'Open Studio button must fit the popup');
     });
     await scenario('Studio channel list explains choosing a video', 'studio-list', async () => {
       assert.match(await page.locator('#status').innerText(), /chọn một video/);
@@ -78,14 +83,22 @@ const { chromium } = require('playwright');
       assert.equal(await page.locator('#retry').isVisible(), true);
       assert.equal(await page.locator('#copy-error').isVisible(), true);
     });
-    await scenario('guidance and long error remain usable at 300 pixels without horizontal overflow', 'error', async () => {
-      await page.setViewportSize({ width: 300, height: 650 });
+    await scenario('long error wraps inside the wider popup without horizontal overflow', 'error', async () => {
       await page.evaluate(() => { fixture.nextReply = { ok: false, kind: 'error', message: 'Thông tin lỗi: ' + 'x'.repeat(200) }; });
       await page.locator('#retry').click();
       await page.waitForFunction(() => document.getElementById('status').textContent.includes('xxx'));
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
       assert.equal(await page.locator('#retry').isVisible(), true);
-      await page.screenshot({ path: path.join(root, 'artifacts/ui-popup-error-v0.1.16.png') });
+      await page.screenshot({ path: path.join(root, `artifacts/popup-error-v${version}.png`), fullPage: true });
+    });
+    await scenario('a tiny initial viewport cannot shrink the intrinsic popup width', 'wrong-site', async () => {
+      await page.setViewportSize({ width: 25, height: 600 });
+      await page.reload();
+      await page.waitForFunction(() => !document.getElementById('guide').hidden);
+      assert.equal(await page.evaluate(() => document.documentElement.getBoundingClientRect().width), 460);
+      assert.equal(await page.evaluate(() => document.body.getBoundingClientRect().width), 460);
+      await page.setViewportSize({ width: 460, height: 600 });
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     });
     assert.deepEqual(errors, []);
     console.log(`${passed} local popup scenarios passed. Real Chrome toolbar popup acceptance is not covered by this mock.`);
