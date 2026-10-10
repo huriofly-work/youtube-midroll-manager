@@ -1,5 +1,7 @@
 # Lịch sử thay đổi
 
+0.1.16: thiết kế lại popup và bảng Studio, cố định header/tab/thanh thao tác, gom thiết lập, bỏ nút cộng/trừ để đồng nhất ô nhập và quy đổi giây, báo lỗi ngay tại ô nhập, phân biệt nút chèn/dọn và hiển thị số điểm. Thêm tiến độ đã xác nhận, giữ kế hoạch sau chạy để đối chiếu và yêu cầu xem trước lại. Làm rõ neo tự động ở trước/sau và lý do xóa từng mốc. Rút gọn hướng dẫn lặp; sửa phiên bản trong báo cáo lỗi popup. Thêm kiểm tra bố cục nhỏ, bàn phím, tiến độ/Dừng và preview. Giữ nguyên thuật toán, bảo vệ mọi điểm tự động/chưa rõ loại và việc người dùng tự Lưu.
+
 0.1.15: thêm hai ô đoạn đầu/cuối riêng trong tab Dọn điểm, ghi nhớ cài đặt, mặc định 0. Xóa các điểm thủ công ngoài cửa sổ được phép, giữ mốc đúng ranh giới; luôn giữ mọi điểm tự động và chưa rõ loại, kể cả trong hai đoạn loại trừ. Preview ghi lý do, đổi ô nhập hủy preview. Kiểm tra bộ đếm phần nhỏ giây tại ranh giới cuối và dừng trước khi xóa nếu không so sánh được chắc chắn. Quy tắc Đang xem xét/cảnh báo/khoảng cách và việc tự Lưu giữ nguyên.
 
 0.1.14: rà soát đầy đủ thuật toán và vòng đời, sửa thứ tự phần nhỏ giây, loading/help false positives, điểm bất biến/tự động mới, metadata và availability. Tối ưu đọc DOM/commit microtask, mở lại bảng và IPC abort. Rút hướng dẫn và sửa kiểm thử/benchmark. Chi tiết ở artifacts/AUDIT-0.1.14.md.

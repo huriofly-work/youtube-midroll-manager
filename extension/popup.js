@@ -1,6 +1,8 @@
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
+  const VERSION = globalThis.chrome?.runtime?.getManifest?.()?.version || "0.1.16";
+  $("version").textContent = `v${VERSION}`;
   let revision = 0;
   let report = null;
   async function openPanel() {
@@ -20,7 +22,7 @@
         $("status").dataset.tone = "error";
         $("retry").hidden = false;
         $("copy-error").hidden = false;
-        report = { version: "0.1.14", message: $("status").textContent, stage: "open-panel" };
+        report = { version: VERSION, message: $("status").textContent, stage: "open-panel" };
       }
     } catch {
       if (revision !== current) return;
@@ -29,7 +31,7 @@
       $("guide").hidden = false;
       $("retry").hidden = false;
       $("copy-error").hidden = false;
-      report = { version: "0.1.14", message: $("status").textContent, stage: "open-panel" };
+      report = { version: VERSION, message: $("status").textContent, stage: "open-panel" };
     }
   }
   $("retry").addEventListener("click", () => { void openPanel(); });

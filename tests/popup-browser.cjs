@@ -18,12 +18,13 @@ const { chromium } = require('playwright');
   const browser = await chromium.launch({ headless: true, ...(process.env.CHROME_TEST_PATH ? { executablePath: process.env.CHROME_TEST_PATH } : {}) });
   const page = await browser.newPage({ viewport: { width: 380, height: 650 } });
   const errors = []; page.on('pageerror', (error) => errors.push(error.message));
-  await page.addInitScript(() => {
+  const version = JSON.parse(await fs.readFile(path.join(root, 'extension/manifest.json'), 'utf8')).version;
+  await page.addInitScript((version) => {
     const state = new URL(location.href).searchParams.get('state');
     globalThis.fixture = { messages: [], closed: false };
     window.close = () => { fixture.closed = true; };
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { async writeText(text) { fixture.copied = text; } } });
-    globalThis.chrome = { runtime: { async sendMessage(message) {
+    globalThis.chrome = { runtime: { getManifest() { return { version }; }, async sendMessage(message) {
       fixture.messages.push(message);
       if (fixture.nextReply) return fixture.nextReply;
       if (state === 'success') return { ok: true };
@@ -31,7 +32,7 @@ const { chromium } = require('playwright');
       if (state === 'error') return { ok: false, kind: 'error', message: 'Không mở được bảng trên tab này. Hãy tải lại extension và làm mới trang Studio, rồi thử lại.' };
       return { ok: false, kind: 'instruction', message: state === 'studio-list' ? 'Bạn đang ở YouTube Studio. Hãy chọn một video rồi vào Kiếm tiền → Quản lý vị trí quảng cáo.' : 'Extension chèn điểm trên YouTube Studio. Hãy mở một video rồi vào Quản lý vị trí quảng cáo.' };
     } } };
-  });
+  }, version);
   let passed = 0;
   async function scenario(name, state, check) {
     await page.goto(`http://127.0.0.1:${server.address().port}/popup.html?state=${state}`);
@@ -64,6 +65,8 @@ const { chromium } = require('playwright');
       await page.waitForFunction(() => Boolean(fixture.copied));
       const report = JSON.parse(await page.evaluate(() => fixture.copied));
       assert.equal(report.stage, 'open-panel');
+      assert.equal(report.version, version);
+      assert.equal(await page.locator('#version').innerText(), 'v' + version);
       assert.ok(!Object.keys(report).some((key) => /url|tab|account|videoId/i.test(key)));
       await page.evaluate(() => { fixture.nextReply = { ok: true }; });
       await page.locator('#retry').click();
@@ -74,6 +77,15 @@ const { chromium } = require('playwright');
       assert.match(await page.locator('#status').innerText(), /Không kết nối/);
       assert.equal(await page.locator('#retry').isVisible(), true);
       assert.equal(await page.locator('#copy-error').isVisible(), true);
+    });
+    await scenario('guidance and long error remain usable at 300 pixels without horizontal overflow', 'error', async () => {
+      await page.setViewportSize({ width: 300, height: 650 });
+      await page.evaluate(() => { fixture.nextReply = { ok: false, kind: 'error', message: 'Thông tin lỗi: ' + 'x'.repeat(200) }; });
+      await page.locator('#retry').click();
+      await page.waitForFunction(() => document.getElementById('status').textContent.includes('xxx'));
+      assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+      assert.equal(await page.locator('#retry').isVisible(), true);
+      await page.screenshot({ path: path.join(root, 'artifacts/ui-popup-error-v0.1.16.png') });
     });
     assert.deepEqual(errors, []);
     console.log(`${passed} local popup scenarios passed. Real Chrome toolbar popup acceptance is not covered by this mock.`);

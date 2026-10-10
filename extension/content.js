@@ -8,92 +8,110 @@
     return;
   }
   const P = globalThis.MidrollPlanner;
+  const VERSION = "0.1.16";
   const host = document.createElement("div");
   globalThis.MidrollPanelHost = host;
   host.id = HOST_ID;
-  host.style.cssText = "position:fixed;right:18px;top:18px;width:360px;max-width:calc(100vw - 36px);z-index:2147483647;color-scheme:light;";
+  host.style.cssText = "position:fixed;right:12px;top:12px;width:380px;max-width:calc(100vw - 24px);z-index:2147483647;color-scheme:light;";
   const shadow = host.attachShadow({ mode: "open" });
   shadow.innerHTML = `
     <style>
       :host { all: initial; font-family: Arial, sans-serif; }
       * { box-sizing: border-box; }
-      .panel { color: #233149; background: #fff; border: 1px solid #d4dfec; border-radius: 16px; box-shadow: 0 12px 48px #12203938; max-height: calc(100vh - 36px); overflow: auto; font-size: 14px; line-height: 1.5; }
-      header { padding: 18px 20px; border-bottom: 1px solid #e7edf5; display: flex; gap: 8px; align-items: start; }
-      h2 { margin: 0; font-size: 17px; line-height: 1.4; }
-      .subtitle { color: #596a80; font-size: 12px; margin: 3px 0 0; }
-      #close { margin-left: auto; padding: 2px 7px; border: 0; background: none; font-size: 22px; color: #596a80; }
-      main { padding: 18px 20px 20px; }
-      .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 16px; }
-      .tabs button[aria-selected="true"] { background: #1967d2; border-color: #1967d2; color: #fff; }
-      .data { margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid #e7edf5; }
-      #load { width: 100%; margin-top: 8px; }
-      #data-summary { margin-bottom: 0; }
-      label { display: block; font-weight: 600; margin-bottom: 6px; }
-      input { width: 100%; border: 1px solid #b9c8da; border-radius: 8px; padding: 10px 12px; color: #233149; background: #fff; font: inherit; }
-      input:focus { outline: 2px solid #c0d8ff; border-color: #1967d2; }
-      .stepper { display: grid; grid-template-columns: 40px 1fr 40px; gap: 6px; }
-      .stepper button { padding: 8px; font-size: 20px; user-select: none; }
-      .help { font-size: 12px; color: #64748b; margin: 6px 0 12px; }
-      .limits { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-      .limits label { font-size: 12px; }
-      #times[data-mode="cleanup"] { grid-template-columns: 1fr; }
-      #times[data-mode="cleanup"] li { text-align: left; font: 12px Arial, sans-serif; }
-      #duration { display: block; padding: 10px 12px; border-radius: 8px; background: #eff5ff; font-weight: 600; }
-      button { cursor: pointer; font: inherit; border-radius: 8px; padding: 10px 12px; font-weight: 600; border: 1px solid #c4d2e3; color: #233149; background: #f8fafc; }
-      button:focus-visible { outline: 2px solid #1967d2; outline-offset: 2px; }
-      button:disabled { opacity: .5; cursor: default; }
-      .actions { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; margin-top: 14px; }
-      .primary { background: #1967d2; color: #fff; border-color: #1967d2; }
-      #stop { color: #a72428; border-color: #e7babc; width: 100%; margin-top: 8px; }
       [hidden] { display: none !important; }
-      #status { padding: 11px 12px; border-radius: 8px; background: #f1f5f9; white-space: pre-line; margin-top: 14px; font-size: 13px; }
-      #status[data-tone="error"] { background: #fff1f0; color: #9b2723; }
-      #status[data-tone="success"] { background: #edf8f0; color: #23623a; }
-      #preview { border-top: 1px solid #e7edf5; margin-top: 16px; padding-top: 14px; }
-      #summary { font-size: 13px; margin: 0 0 8px; white-space: pre-line; }
-      #times { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; max-height: 170px; overflow: auto; }
-      #times li { font: 12px monospace; text-align: center; border-radius: 6px; background: #f1f5f9; padding: 5px; }
-      #copy-error { width: 100%; margin-top: 10px; font-size: 12px; }
+      .panel { color: #233149; background: #fff; border: 1px solid #d4dfec; border-radius: 16px; box-shadow: 0 12px 48px #12203938; max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); display: flex; flex-direction: column; overflow: hidden; font-size: 14px; line-height: 1.5; }
+      header { padding: 16px; display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+      h2 { margin: 0; font-size: 18px; line-height: 1.4; }
+      .subtitle { color: #596a80; font-size: 12px; margin: 3px 0 0; }
+      .version { font-size: 10px; color: #596a80; background: #f1f5f9; border-radius: 5px; padding: 3px 5px; margin-left: auto; }
+      #close { padding: 0; width: 32px; height: 32px; border: 0; background: none; font-size: 22px; color: #596a80; }
+      .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 0 16px 12px; padding: 4px; background: #edf1f6; border-radius: 11px; flex-shrink: 0; }
+      .tabs button { border: 0; background: transparent; min-height: 36px; padding: 6px; color: #596a80; }
+      .tabs button[aria-selected="true"] { background: #fff; color: #1967d2; box-shadow: 0 1px 4px #23314918; }
+      main { padding: 0 16px 16px; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+      .data { background: #f3f7fc; border: 1px solid #e1e9f4; border-radius: 10px; padding: 12px; margin-bottom: 16px; }
+      .data-head { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+      .data label { font-size: 11px; color: #596a80; margin: 0; }
+      #load { font-size: 11px; min-height: 32px; padding: 5px 7px; background: #fff; }
+      #duration { display: block; font: 600 22px/1.4 monospace; margin: 3px 0; overflow-wrap: anywhere; }
+      #data-summary { margin: 0; font-size: 12px; color: #596a80; }
+      fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+      legend { padding: 0; margin: 0 0 12px; font-size: 12px; font-weight: 600; color: #596a80; }
+      label { display: block; font-weight: 600; margin-bottom: 6px; }
+      input { width: 100%; min-width: 0; height: 42px; border: 1px solid #b9c8da; border-radius: 8px; padding: 9px 12px; color: #233149; background: #fff; font: inherit; }
+      input:focus { outline: 2px solid #c0d8ff; border-color: #1967d2; }
+      input[aria-invalid="true"] { border-color: #ba3438; }
+      .input-hint[data-invalid="true"] { color: #a72428; }
+      .input-hint { font-size: 11px; color: #596a80; margin: 5px 0 12px; }
+      .help { font-size: 12px; color: #596a80; margin: 6px 0 12px; }
+      .limits { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+      .limits label { font-size: 12px; }
+      .policy { padding: 10px 12px; border-radius: 8px; border: 1px solid #d3e9dc; background: #f1f9f4; color: #23623a; font-size: 12px; margin: 12px 0 0; }
+      .policy strong { display: block; margin-bottom: 3px; }
+      details { font-size: 12px; margin: 12px 0 0; color: #596a80; }
+      summary { cursor: pointer; font-weight: 600; }
+      details ul { padding-left: 18px; margin: 8px 0; }
+      details li { margin: 6px 0; }
+      button { cursor: pointer; font: inherit; border-radius: 8px; min-height: 42px; padding: 9px 10px; font-weight: 600; border: 1px solid #c4d2e3; color: #233149; background: #f8fafc; }
+      button:hover:not(:disabled) { filter: brightness(.97); }
+      button:focus-visible, summary:focus-visible { outline: 2px solid #1967d2; outline-offset: 2px; }
+      button:disabled { opacity: .5; cursor: default; }
+      .action-bar { padding: 12px 16px; border-top: 1px solid #e1e9f4; flex-shrink: 0; background: #fff; }
+      .actions { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
+      .primary { background: #1967d2; color: #fff; border-color: #1967d2; }
+      .danger { background: #b32d32; color: #fff; border-color: #b32d32; }
+      #stop { color: #a72428; border-color: #e7babc; width: 100%; }
+      #run-progress { margin-bottom: 10px; font-size: 12px; color: #596a80; }
+      progress { display: block; width: 100%; height: 6px; margin-top: 6px; accent-color: #1967d2; }
+      #status { padding: 10px 12px; border: 1px solid #e1e9f4; border-radius: 8px; background: #f3f7fc; white-space: pre-line; overflow-wrap: anywhere; margin-top: 14px; font-size: 12px; }
+      #status[data-tone="error"] { background: #fff1f0; border-color: #efc9c7; color: #9b2723; }
+      #status[data-tone="success"] { background: #edf8f0; border-color: #d3e9dc; color: #23623a; }
+      #preview { margin-top: 16px; border-top: 1px solid #e1e9f4; padding-top: 14px; }
+      #preview-title { font-size: 14px; margin: 0 0 4px; }
+      #preview-note { margin: 0 0 10px; font-size: 11px; color: #596a80; }
+      #summary { font-size: 12px; margin: 0 0 10px; color: #596a80; }
+      #summary p { margin: 4px 0; }
+      #summary p:first-child { font-weight: 600; color: #233149; font-size: 13px; }
+      #times { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; max-height: 220px; overflow: auto; overscroll-behavior: contain; }
+      #times li { font: 12px/1.5 monospace; text-align: center; border-radius: 6px; background: #f1f5f9; padding: 7px; }
+      #times[data-mode="cleanup"] { grid-template-columns: 1fr; }
+      #times[data-mode="cleanup"] li { display: grid; grid-template-columns: 72px minmax(0, 1fr); gap: 8px; text-align: left; border-left: 3px solid #e7babc; }
+      .point-reason { font: 12px/1.5 Arial, sans-serif; color: #596a80; overflow-wrap: anywhere; }
+      #copy-error { width: 100%; margin-top: 8px; font-size: 12px; }
       #copy-status { color: #596a80; font-size: 12px; }
       textarea { margin-top: 8px; width: 100%; height: 110px; font: 11px monospace; border: 1px solid #c4d2e3; border-radius: 6px; padding: 8px; }
-      footer { color: #64748b; font-size: 11px; padding-top: 14px; }
+      footer { color: #596a80; font-size: 10px; margin-top: 7px; text-align: center; }
+      @media (max-width: 480px) { header { padding: 12px; } .tabs { margin: 0 12px 10px; } main { padding: 0 12px 12px; } .action-bar { padding: 10px 12px; } .limits { gap: 8px; } #times { grid-template-columns: repeat(2, minmax(0, 1fr)); } .data { padding: 10px; } }
     </style>
-    <section class="panel" aria-label="Chèn điểm quảng cáo YouTube">
-        <header><div><h2>Chèn và dọn điểm quảng cáo</h2><p class="subtitle">Một video · Bạn tự xem lại và lưu · v0.1.15</p></div><button id="close" type="button" title="Ẩn bảng điều khiển" aria-label="Ẩn bảng điều khiển">×</button></header>
+    <section class="panel" aria-label="Chèn và dọn điểm quảng cáo YouTube">
+      <header><div><h2>Điểm quảng cáo</h2><p class="subtitle">Một video · Bạn tự xem lại và lưu</p></div><span class="version">v${VERSION}</span><button id="close" type="button" title="Ẩn bảng điều khiển" aria-label="Ẩn bảng điều khiển">×</button></header>
+      <div class="tabs" role="tablist" aria-label="Chức năng quảng cáo"><button id="tab-insert" role="tab" aria-selected="true" aria-controls="insert-panel" type="button">Chèn điểm</button><button id="tab-cleanup" role="tab" aria-selected="false" aria-controls="cleanup-panel" tabindex="-1" type="button">Dọn điểm</button></div>
       <main>
-        <div class="tabs" role="tablist" aria-label="Chức năng quảng cáo"><button id="tab-insert" role="tab" aria-selected="true" aria-controls="insert-panel" type="button">Chèn điểm</button><button id="tab-cleanup" role="tab" aria-selected="false" aria-controls="cleanup-panel" tabindex="-1" type="button">Dọn điểm</button></div>
-        <div class="data">
-          <label for="duration">Độ dài video · tự động</label>
-          <output id="duration" aria-live="polite">Đang đọc…</output>
-          <button id="load" type="button" title="Đọc lại thời lượng, điểm chèn và cảnh báo đang hiển thị trong Studio">↻ Tải lại dữ liệu</button>
-          <p id="data-summary" class="help" aria-live="polite">Đang đọc dữ liệu từ Studio…</p>
-        </div>
+        <div class="data"><div class="data-head"><label for="duration">Thời lượng · tự động</label><button id="load" type="button" title="Đọc lại thời lượng, điểm chèn và cảnh báo đang hiển thị trong Studio">↻ Tải lại dữ liệu</button></div><output id="duration" aria-live="polite">Đang đọc…</output><p id="data-summary" aria-live="polite">Đang đọc dữ liệu từ Studio…</p></div>
         <section id="insert-panel" role="tabpanel" aria-labelledby="tab-insert">
-        <div class="limits"><div><label for="start-margin">Đoạn đầu không chèn (giây)</label><input id="start-margin" type="text" value="60" inputmode="numeric" autocomplete="off"></div><div><label for="end-margin">Đoạn cuối không chèn (giây)</label><input id="end-margin" type="text" value="60" inputmode="numeric" autocomplete="off"></div></div>
-        <p class="help">Điểm đầu ở giây bạn nhập. Đoạn cuối được tính lùi từ cuối video. Có thể nhập 0.</p>
-        <label for="interval">Khoảng cách giữa các điểm (giây)</label>
-        <div class="stepper"><button id="decrease" type="button" aria-label="Giảm 1 giây" title="Giảm 1 giây">−</button><input id="interval" type="text" value="120" inputmode="numeric" autocomplete="off" spellcheck="false"><button id="increase" type="button" aria-label="Tăng 1 giây" title="Tăng 1 giây">+</button></div>
-        <p class="help">Mỗi điểm mới cách điểm dự kiến trước đó theo số giây này.</p>
-        <p class="help">Khi chèn, giữ mọi điểm có sẵn và giữ quảng cáo tự động.</p>
-        <div class="actions"><button id="read">Xem trước</button><button id="start" class="primary" disabled>Chèn điểm</button></div>
+          <fieldset><legend>Thiết lập chèn · số giây</legend>
+            <div class="limits"><div><label for="start-margin">Đoạn đầu không chèn</label><input id="start-margin" type="text" value="60" inputmode="numeric" autocomplete="off" aria-describedby="start-margin-hint"><p class="input-hint" id="start-margin-hint"></p></div><div><label for="end-margin">Đoạn cuối không chèn</label><input id="end-margin" type="text" value="60" inputmode="numeric" autocomplete="off" aria-describedby="end-margin-hint"><p class="input-hint" id="end-margin-hint"></p></div></div>
+            <label for="interval">Khoảng cách giữa các điểm</label><input id="interval" type="text" value="120" inputmode="numeric" autocomplete="off" spellcheck="false" aria-describedby="interval-hint"><p class="input-hint" id="interval-hint"></p>
+          </fieldset>
+          <p class="help">Điểm đầu ở giây bạn nhập. Đoạn cuối tính lùi từ cuối video; nhập 0 nếu không chừa.</p>
+          <div class="policy"><strong>Giữ mọi điểm có sẵn</strong>Giữ cả điểm tự động. Bỏ qua mốc gần hoặc trùng điểm cũ.</div>
         </section>
         <section id="cleanup-panel" role="tabpanel" aria-labelledby="tab-cleanup" hidden>
-          <div class="limits"><div><label for="cleanup-start-margin">Đoạn đầu không chèn (giây)</label><input id="cleanup-start-margin" type="text" value="0" inputmode="numeric" autocomplete="off"></div><div><label for="cleanup-end-margin">Đoạn cuối không chèn (giây)</label><input id="cleanup-end-margin" type="text" value="0" inputmode="numeric" autocomplete="off"></div></div>
-          <p class="help">Xóa điểm thủ công trước mốc đầu và sau mốc tính lùi từ cuối video. Giữ mốc đúng ranh giới; nhập 0 để bỏ qua đoạn đó. Luôn giữ mọi điểm tự động.</p>
-          <label for="minimum-spacing">Khoảng cách tối thiểu khi dọn (giây)</label><input id="minimum-spacing" type="text" value="120" inputmode="numeric" autocomplete="off">
-          <p class="help">Xóa điểm thủ công trong hai đoạn trên, Đang xem xét hoặc có cảnh báo đỏ, rồi lọc các điểm thủ công còn lại quá gần nhau. Giữ điểm sớm hơn; luôn giữ mọi điểm tự động và điểm chưa rõ loại. Áp dụng cả điểm thủ công có sẵn.</p>
-          <p class="help">Xem trước dọn tự đọc lại dữ liệu. Tải lại dữ liệu dùng khi bạn chỉ muốn cập nhật trạng thái.</p>
-          <div class="actions"><button id="cleanup-read">Xem trước dọn</button><button id="cleanup-start" class="primary" disabled>Dọn điểm</button></div>
+          <fieldset><legend>Thiết lập dọn · số giây</legend>
+            <div class="limits"><div><label for="cleanup-start-margin">Đoạn đầu không chèn</label><input id="cleanup-start-margin" type="text" value="0" inputmode="numeric" autocomplete="off" aria-describedby="cleanup-start-margin-hint"><p class="input-hint" id="cleanup-start-margin-hint"></p></div><div><label for="cleanup-end-margin">Đoạn cuối không chèn</label><input id="cleanup-end-margin" type="text" value="0" inputmode="numeric" autocomplete="off" aria-describedby="cleanup-end-margin-hint"><p class="input-hint" id="cleanup-end-margin-hint"></p></div></div>
+            <label for="minimum-spacing">Khoảng cách tối thiểu khi dọn</label><input id="minimum-spacing" type="text" value="120" inputmode="numeric" autocomplete="off" aria-describedby="minimum-spacing-hint spacing-rule"><p class="input-hint" id="minimum-spacing-hint"></p>
+          </fieldset>
+          <p class="help" id="spacing-rule">Điểm thủ công quá gần điểm tự động ở <strong>trước hoặc sau</strong> sẽ bị xóa. Giữa các điểm thủ công phù hợp, giữ điểm sớm hơn.</p>
+          <div class="policy"><strong>Luôn giữ mọi điểm tự động</strong>Kể cả trong đoạn đầu/cuối, có cảnh báo hoặc Đang xem xét. Giữ cả điểm chưa rõ loại.</div>
+          <details><summary>Các điểm thủ công sẽ được dọn</summary><ul><li>Điểm trong đoạn đầu/cuối. Giữ mốc đúng ranh giới; nhập 0 để bỏ qua đoạn đó.</li><li>Điểm có cảnh báo đỏ hoặc Đang xem xét.</li><li>Điểm còn lại gần nhau hơn khoảng cách tối thiểu.</li></ul>Cài đặt dọn độc lập với cài đặt chèn. Áp dụng cả điểm thủ công có sẵn.</details>
         </section>
-        <button id="stop" hidden>Dừng</button>
         <div id="status" role="status" aria-live="polite">Mở Quản lý vị trí quảng cáo trong YouTube Studio, rồi bấm Xem trước.</div>
-        <button id="copy-error" type="button" hidden>Sao chép thông tin lỗi</button>
-        <p id="copy-status" role="status" hidden></p>
-        <textarea id="error-details" readonly hidden aria-label="Thông tin lỗi để sao chép"></textarea>
-        <section id="preview" hidden><p id="summary"></p><ul id="times" aria-label="Các điểm sẽ thêm"></ul></section>
-        <footer>Có thể dùng ứng dụng khác khi chạy. Chrome hiện thanh thông báo điều khiển tab trong lúc chạy.<br>Sau khi chèn hoặc dọn, kiểm tra trong Studio rồi tự bấm Tiếp tục/Lưu.</footer>
+        <button id="copy-error" type="button" hidden>Sao chép thông tin lỗi</button><p id="copy-status" role="status" hidden></p><textarea id="error-details" readonly hidden aria-label="Thông tin lỗi để sao chép"></textarea>
+        <section id="preview" hidden><h3 id="preview-title">Xem trước thay đổi</h3><p id="preview-note">Chưa thay đổi điểm nào. Kiểm tra danh sách trước khi chạy.</p><div id="summary"></div><ul id="times" aria-label="Các điểm sẽ thêm"></ul></section>
       </main>
+      <div class="action-bar"><div id="run-progress" hidden><span id="progress-text"></span><progress id="progress" max="1" value="0" aria-label="Tiến độ đã xác nhận"></progress></div><div id="insert-actions" class="actions"><button id="read" type="button">Xem trước</button><button id="start" type="button" class="primary" disabled>Chèn điểm</button></div><div id="cleanup-actions" class="actions" hidden><button id="cleanup-read" type="button">Xem trước</button><button id="cleanup-start" type="button" class="danger" disabled>Dọn điểm</button></div><button id="stop" type="button" hidden>Dừng</button><footer>Xem trước tự đọc dữ liệu mới · Bạn tự bấm Tiếp tục/Lưu</footer></div>
     </section>`;
+
   globalThis.MidrollStudio.mountPanel(host);
   // Keep text-entry keys inside the helper so Studio's bubbling shortcuts
   // do not intercept typing. Native text editing and Tab remain available.
@@ -145,19 +163,43 @@
     $("copy-status").hidden = true;
     $("error-details").hidden = true;
   }
-  function invalidate() {
+  function invalidate({ keepPreview = false } = {}) {
     plan = null;
     cleanupPlan = null;
     adapter = null;
     $("start").disabled = true;
     $("cleanup-start").disabled = true;
-    $("preview").hidden = true;
+    $("start").textContent = "Chèn điểm";
+    $("cleanup-start").textContent = "Dọn điểm";
+    if (!keepPreview) $("preview").hidden = true;
+    else {
+      $("preview-title").textContent = "Kế hoạch lần chạy vừa rồi";
+      $("preview-note").textContent = "Đây là kế hoạch đã dùng, không phải kết quả xác nhận. Kiểm tra kết quả thực tế trong Studio; xem trước lại để chạy tiếp.";
+    }
+  }
+  function updateProgress(count, total) {
+    $("progress").max = Math.max(1, total);
+    $("progress").value = count;
+    $("progress-text").textContent = `Đã xác nhận: ${count}/${total} điểm`;
+  }
+  function showSummary(lines) {
+    $("summary").replaceChildren(...lines.filter(Boolean).map((line) => {
+      const item = document.createElement("p"); item.textContent = line; return item;
+    }));
+    $("preview-title").textContent = "Xem trước thay đổi";
+    $("preview-note").textContent = "Chưa thay đổi điểm nào. Kiểm tra danh sách trước khi chạy.";
+  }
+  function updateHint(id) {
+    const text = $(id).value.trim(), value = Number(text);
+    const minimum = ["interval", "minimum-spacing"].includes(id) ? 1 : 0;
+    const valid = /^\d+$/.test(text) && Number.isSafeInteger(value) && value >= minimum;
+    $(id).setAttribute("aria-invalid", String(!valid));
+    $(id + "-hint").dataset.invalid = String(!valid);
+    $(id + "-hint").textContent = valid ? `${value} giây${value ? ` = ${P.formatTime(value).replace(/^00:/, "")}` : " · Không chừa đoạn này"}` : `Nhập số giây nguyên ${minimum ? "lớn hơn 0" : "từ 0 trở lên"}.`;
   }
   function busy(value) {
     for (const id of ["start-margin", "end-margin", "cleanup-start-margin", "cleanup-end-margin", "minimum-spacing", "tab-insert", "tab-cleanup"]) $(id).disabled = value;
     $("interval").disabled = value;
-    $("decrease").disabled = value;
-    $("increase").disabled = value;
     $("read").disabled = value || Boolean(durationController);
     $("load").disabled = value || Boolean(durationController);
     $("close").disabled = value;
@@ -166,15 +208,22 @@
     $("start").disabled = value || !plan?.additions.length;
     $("cleanup-read").disabled = value || Boolean(durationController);
     $("cleanup-start").disabled = value || !cleanupPlan?.removals.length;
+    $(activeTab + "-actions").hidden = value;
+    $("run-progress").hidden = !value;
+    if (value) updateProgress(0, activeTab === "insert" ? plan.additions.length : cleanupPlan.removals.length);
   }
 
   chrome.storage.local.get({ intervalSeconds: 120, startSeconds: 60, endMarginSeconds: 60, minimumSpacingSeconds: 120, cleanupStartSeconds: 0, cleanupEndMarginSeconds: 0 }).then((saved) => {
     if (touched) return;
     for (const [id, name, minimum] of [["interval", "intervalSeconds", 1], ["start-margin", "startSeconds", 0], ["end-margin", "endMarginSeconds", 0], ["minimum-spacing", "minimumSpacingSeconds", 1], ["cleanup-start-margin", "cleanupStartSeconds", 0], ["cleanup-end-margin", "cleanupEndMarginSeconds", 0]]) {
       if (/^\d+$/.test(String(saved[name])) && Number.isSafeInteger(Number(saved[name])) && Number(saved[name]) >= minimum) $(id).value = saved[name];
+      updateHint(id);
     }
   }).catch(() => {});
-  for (const id of ["start-margin", "end-margin", "cleanup-start-margin", "cleanup-end-margin", "minimum-spacing"]) $(id).addEventListener("input", () => { touched = true; invalidate(); });
+  for (const id of ["interval", "start-margin", "end-margin", "cleanup-start-margin", "cleanup-end-margin", "minimum-spacing"]) {
+    updateHint(id);
+    $(id).addEventListener("input", () => { touched = true; updateHint(id); invalidate(); });
+  }
   function selectTab(next, focus = false) {
     if (controller || next === activeTab) return;
     activeTab = next;
@@ -183,7 +232,9 @@
       $("tab-" + name).setAttribute("aria-selected", String(selected));
       $("tab-" + name).tabIndex = selected ? 0 : -1;
       $(name + "-panel").hidden = !selected;
+      $(name + "-actions").hidden = !selected;
     }
+    shadow.querySelector("main").scrollTop = 0;
     if (focus) $("tab-" + next).focus();
     void refreshDuration(false);
   }
@@ -196,30 +247,6 @@
     });
   }
   globalThis.MidrollFocusPanel = () => $(activeTab === "insert" ? "interval" : "minimum-spacing").focus();
-  $("interval").addEventListener("input", () => { touched = true; invalidate(); });
-  function stepInterval(direction) {
-    if ($("interval").disabled) return;
-    const text = $("interval").value.trim();
-    const value = Number(text);
-    if (!/^\d+$/.test(text) || !Number.isSafeInteger(value) || value < 1) {
-      status("Nhập số giây nguyên lớn hơn 0 trước khi tăng hoặc giảm.", "error");
-      $("interval").focus();
-      return;
-    }
-    const next = Math.max(1, value + direction);
-    if (!Number.isSafeInteger(next)) return;
-    $("interval").value = String(next);
-    $("interval").dispatchEvent(new Event("input", { bubbles: true }));
-    $("interval").focus();
-  }
-  // No press-and-hold timer or native number spinner: one click, one step.
-  $("decrease").addEventListener("click", () => stepInterval(-1));
-  $("increase").addEventListener("click", () => stepInterval(1));
-  $("interval").addEventListener("keydown", (event) => {
-    if (event.key !== "ArrowUp" && event.key !== "ArrowDown") return;
-    event.preventDefault();
-    if (!event.repeat) stepInterval(event.key === "ArrowUp" ? 1 : -1);
-  });
   $("close").addEventListener("click", () => {
     host.hidden = true;
     durationController?.abort();
@@ -255,29 +282,44 @@
       const current = cleaning ? adapter.cleanupSnapshot() : adapter.snapshot();
       knownDuration = current.duration;
       $("duration").textContent = P.formatTime(current.duration);
-      $("data-summary").textContent = `${current.rows.length} điểm hiện có${cleaning ? ` · ${current.rows.filter((row) => row.kind === "manual" && row.warning).length} điểm thủ công có cảnh báo · ${current.rows.filter((row) => row.pending).length} điểm đang xem xét` : ""}.`;
+      const warningCount = cleaning ? current.rows.filter((row) => row.kind === "manual" && row.warning).length : 0;
+      const pendingCount = cleaning ? current.rows.filter((row) => row.pending).length : 0;
+      $("data-summary").textContent = [`${current.rows.length} điểm hiện có`, warningCount && `${warningCount} điểm thủ công có cảnh báo`, pendingCount && `${pendingCount} điểm đang xem xét`].filter(Boolean).join(" · ") + ".";
       if (!preview) {
-        status(cleaning ? "Đã đọc lại dữ liệu. Chọn đoạn đầu/cuối và khoảng cách tối thiểu rồi bấm Xem trước dọn." : "Đã đọc độ dài video. Chọn khoảng cách rồi bấm Xem trước.");
+        status(cleaning ? "Chọn đoạn đầu/cuối và khoảng cách tối thiểu rồi bấm Xem trước." : "Chọn đoạn đầu/cuối và khoảng cách rồi bấm Xem trước.");
         return;
       }
       if (cleaning) {
         cleanupPlan = globalThis.MidrollCleanup.makePlan(current, $("minimum-spacing").value, { startSeconds: $("cleanup-start-margin").value, endMarginSeconds: $("cleanup-end-margin").value });
         chrome.storage.local.set({ minimumSpacingSeconds: cleanupPlan.spacing, cleanupStartSeconds: cleanupPlan.start, cleanupEndMarginSeconds: cleanupPlan.endMargin }).catch(() => {});
-        $("summary").textContent = `Sẽ xóa ${cleanupPlan.removals.length}/${cleanupPlan.total} điểm · Giữ ${cleanupPlan.retained} điểm\nGiữ ${cleanupPlan.automatic} điểm tự động · ${cleanupPlan.unknown} điểm chưa rõ loại\nĐoạn đầu: ${cleanupPlan.start} giây · Đoạn cuối: ${cleanupPlan.endMargin} giây\nSẽ xóa ${cleanupPlan.marginRemovals} điểm theo đoạn đầu/cuối\nSẽ xóa ${cleanupPlan.reviewRemovals} điểm thủ công Đang xem xét\nKhoảng cách tối thiểu: ${cleanupPlan.spacing} giây (điểm tự động được giữ dù gần nhau).`;
+        showSummary([
+          `Sẽ xóa ${cleanupPlan.removals.length}/${cleanupPlan.total} điểm · Giữ ${cleanupPlan.retained} điểm`,
+          `Giữ ${cleanupPlan.automatic} điểm tự động · ${cleanupPlan.unknown} điểm chưa rõ loại`,
+          `Đoạn đầu: ${cleanupPlan.start} giây · Đoạn cuối: ${cleanupPlan.endMargin} giây`,
+          cleanupPlan.marginRemovals && `Sẽ xóa ${cleanupPlan.marginRemovals} điểm theo đoạn đầu/cuối`,
+          cleanupPlan.reviewRemovals && `Sẽ xóa ${cleanupPlan.reviewRemovals} điểm thủ công Đang xem xét`,
+          `Khoảng cách tối thiểu: ${cleanupPlan.spacing} giây`
+        ]);
         $("times").dataset.mode = "cleanup";
         $("times").setAttribute("aria-label", "Các điểm sẽ xóa và lý do");
         $("times").replaceChildren(...cleanupPlan.removals.map((target) => {
-          const item = document.createElement("li"); item.textContent = `${target.raw} — ${target.reason}`; return item;
+          const item = document.createElement("li");
+          const time = document.createElement("span"), reason = document.createElement("span");
+          time.className = "point-time"; time.textContent = target.raw;
+          reason.className = "point-reason"; reason.textContent = ` — ${target.reason}`;
+          item.append(time, reason); return item;
         }));
         $("preview").hidden = false;
         $("cleanup-start").disabled = cleanupPlan.removals.length === 0;
+        $("cleanup-start").textContent = `Dọn ${cleanupPlan.removals.length} điểm`;
         const unknown = cleanupPlan.unknown ? `\nCó ${cleanupPlan.unknown} điểm chưa xác định được thủ công/tự động; giữ nguyên các điểm đó.` : "";
         status((cleanupPlan.removals.length ? "Kiểm tra danh sách sẽ xóa, rồi bấm Dọn điểm. Chưa thay đổi điểm nào." : "Không có điểm được nhận diện cần dọn.") + unknown, cleanupPlan.unknown && !cleanupPlan.removals.length ? "error" : "");
+        $("preview").scrollIntoView({ block: "start" });
         return;
       }
       plan = { ...P.makePlan(current.duration, $("interval").value, current.times, { startSeconds: $("start-margin").value, endMarginSeconds: $("end-margin").value }), fingerprint: current.fingerprint };
       chrome.storage.local.set({ intervalSeconds: plan.interval, startSeconds: plan.start, endMarginSeconds: plan.endMargin }).catch(() => {});
-      $("summary").textContent = `Thời lượng: ${P.formatTime(plan.duration)} (tự động)\nBắt đầu: ${P.formatTime(plan.start)} · Chừa cuối: ${plan.endMargin} giây\nGiữ ${plan.existing.length} điểm có sẵn · Bỏ qua ${plan.skipped.length} mốc gần/trùng\nSẽ thêm ${plan.additions.length} điểm:`;
+      showSummary([`Sẽ thêm ${plan.additions.length} điểm`, `Thời lượng: ${P.formatTime(plan.duration)} (tự động)`, `Bắt đầu: ${P.formatTime(plan.start)} · Chừa cuối: ${plan.endMargin} giây`, `Giữ ${plan.existing.length} điểm có sẵn · Bỏ qua ${plan.skipped.length} mốc gần/trùng`]);
       $("times").dataset.mode = "insert";
       $("times").setAttribute("aria-label", "Các điểm sẽ thêm");
       $("times").replaceChildren(...plan.additions.map((seconds) => {
@@ -287,13 +329,16 @@
       }));
       $("preview").hidden = false;
       $("start").disabled = plan.additions.length === 0;
+      $("start").textContent = `Chèn ${plan.additions.length} điểm`;
       status(plan.additions.length ? "Kiểm tra các mốc bên dưới, rồi bấm Chèn điểm." : "Các mốc dự kiến đều đã có điểm gần/trùng. Không cần thêm.");
+      $("preview").scrollIntoView({ block: "start" });
     } catch (error) {
       if (reading.signal.aborted || durationController !== reading) return;
       invalidate();
       $("duration").textContent = knownDuration === null ? "Chưa đọc được" : P.formatTime(knownDuration);
       $("data-summary").textContent = knownDuration === null ? "Chưa đọc được dữ liệu mới." : "Đã đọc dữ liệu; kiểm tra lại cài đặt.";
       status(error.message, "error");
+      $("status").scrollIntoView({ block: "nearest" });
     } finally {
       if (durationController === reading) {
         durationController = null;
@@ -332,6 +377,7 @@
         },
         onProgress: (progress) => {
           inserted = progress.inserted;
+          updateProgress(progress.inserted, progress.total);
           status(`Đã thêm ${progress.inserted}/${progress.total} điểm. Mốc vừa xử lý: ${P.formatTime(progress.seconds)}.\nChưa lưu thay đổi.`);
         }
       }), { signal: controller.signal });
@@ -341,8 +387,9 @@
       status(`${stopped ? "Đã dừng theo yêu cầu." : error.message}\nĐã xác nhận thêm ${inserted} điểm; chưa lưu. Kiểm tra cả điểm cuối đang nhập. Các điểm đã thêm vẫn nằm trong bản chỉnh sửa Studio.`, stopped ? "" : "error");
     } finally {
       controller = null;
-      invalidate();
+      invalidate({ keepPreview: true });
       busy(false);
+      $("status").scrollIntoView({ block: "nearest" });
     }
   });
   $("cleanup-start").addEventListener("click", async () => {
@@ -356,14 +403,15 @@
       const result = await globalThis.MidrollBackgroundClient.run(({ signal }) => globalThis.MidrollCleanup.runPlan(currentAdapter, currentPlan, {
         signal,
         onWaiting: (progress) => status(`${progress.message}\nĐã xác nhận xóa ${progress.removed}/${progress.total} điểm. Chưa lưu.`),
-        onProgress: (progress) => { removed = progress.removed; status(`Đã xác nhận xóa ${removed}/${progress.total} điểm · ${P.formatTime(progress.seconds)}.\nChưa lưu thay đổi.`); }
+        onProgress: (progress) => { removed = progress.removed; updateProgress(removed, progress.total); status(`Đã xác nhận xóa ${removed}/${progress.total} điểm · ${P.formatTime(progress.seconds)}.\nChưa lưu thay đổi.`); }
       }), { signal: controller.signal });
       status(`Đã xác nhận xóa ${result.removed} điểm thủ công; giữ các điểm khác và điểm tự động.\nBạn hãy kiểm tra trong Studio, rồi tự bấm Tiếp tục/Lưu.`, "success");
     } catch (error) {
       status(`${error.name === "AbortError" ? `Đã dừng theo yêu cầu.${error.pendingRemoved ? ` Đã bấm xóa ${error.pendingRemoved} điểm trong nhóm đang xử lý; chưa xác nhận nhóm.` : ""}` : error.message}\nĐã xác nhận xóa ${removed} điểm; chưa lưu. Kiểm tra cả nhóm đang xử lý.`, error.name === "AbortError" ? "" : "error");
     } finally {
       controller = null;
-      invalidate(); busy(false);
+      invalidate({ keepPreview: true }); busy(false);
+      $("status").scrollIntoView({ block: "nearest" });
     }
   });
   $("stop").addEventListener("click", () => {
@@ -377,7 +425,7 @@
     let studio;
     try { studio = globalThis.MidrollStudio.diagnostics(); } catch { studio = { available: false }; }
     const interval = $("interval").value.trim();
-    const report = { version: "0.1.15", message: lastError, intervalSeconds: /^\d+$/.test(interval) ? interval : null, studio };
+    const report = { version: VERSION, message: lastError, intervalSeconds: /^\d+$/.test(interval) ? interval : null, studio };
     $("copy-error").disabled = true;
     const copied = await globalThis.MidrollErrorCopy.copy(JSON.stringify(report, null, 2), $("error-details"), () => current === statusRevision);
     if (current !== statusRevision) return;

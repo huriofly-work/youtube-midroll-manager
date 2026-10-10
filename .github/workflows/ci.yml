@@ -29,3 +29,5 @@ jobs:
         run: npm run test:cleanup
       - name: Check popup fixtures
         run: npm run test:popup
+      - name: Check layout and UI interactions
+        run: npm run test:ui

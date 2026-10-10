@@ -1,15 +1,19 @@
-body { margin: 0; width: 340px; font: 14px/1.5 Arial, sans-serif; color: #233149; background: #fff; color-scheme: light; }
-main { padding: 20px; }
-h1 { font-size: 18px; margin: 0; }
-.subtitle { font-size: 12px; color: #64748b; margin: 4px 0 16px; }
-#status { padding: 12px; border-radius: 8px; background: #eff5ff; white-space: pre-line; }
-#status[data-tone="error"] { background: #fff1f0; color: #9b2723; }
-ol { padding-left: 22px; } li { margin-bottom: 10px; }
-a, button { display: block; box-sizing: border-box; width: 100%; border: 1px solid #c4d2e3; border-radius: 8px; padding: 10px; font: inherit; font-weight: 600; text-align: center; }
+* { box-sizing: border-box; }
+body { margin: 0; width: 360px; max-width: 100vw; font: 14px/1.5 Arial, sans-serif; color: #233149; background: #fff; color-scheme: light; }
+main { padding: 18px; }
+header { display: flex; align-items: center; gap: 8px; }
+h1 { font-size: 17px; line-height: 1.4; margin: 0; }
+.subtitle { font-size: 12px; color: #596a80; margin: 4px 0 0; }
+#version { font-size: 10px; color: #596a80; background: #f1f5f9; border-radius: 5px; padding: 3px 5px; margin-left: auto; }
+#status { padding: 12px; border: 1px solid #e1e9f4; border-radius: 8px; background: #f3f7fc; white-space: pre-line; overflow-wrap: anywhere; font-size: 13px; }
+#status[data-tone="error"] { background: #fff1f0; border-color: #efc9c7; color: #9b2723; }
+ol { padding-left: 22px; font-size: 13px; color: #596a80; } li { margin-bottom: 10px; }
+a, button { display: block; width: 100%; min-height: 42px; border: 1px solid #c4d2e3; border-radius: 8px; padding: 10px; font: inherit; font-weight: 600; text-align: center; }
 a { background: #1967d2; color: white; text-decoration: none; border-color: #1967d2; }
-button { margin-top: 10px; color: #233149; background: #f8fafc; cursor: pointer; }
+button { margin-top: 8px; color: #233149; background: #f8fafc; cursor: pointer; }
 button:disabled { opacity: .5; cursor: default; }
 a:focus-visible, button:focus-visible { outline: 2px solid #1967d2; outline-offset: 2px; }
 #copy-status { color: #596a80; font-size: 12px; }
-textarea { box-sizing: border-box; width: 100%; height: 130px; margin-top: 8px; font: 11px monospace; }
+textarea { width: 100%; height: 130px; margin-top: 8px; padding: 8px; border: 1px solid #c4d2e3; border-radius: 8px; font: 11px monospace; }
+.save-note { margin: 14px 0 0; padding-top: 12px; border-top: 1px solid #e1e9f4; color: #596a80; font-size: 11px; }
 [hidden] { display: none !important; }

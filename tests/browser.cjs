@@ -429,40 +429,27 @@ const { chromium } = require('playwright');
       assert.equal(await start.isDisabled(), true);
       assert.equal(await page.evaluate(() => fixture.clicks), 0);
     });
-    await scenario('interval +/- changes exactly once per click and remains stable after release', async () => {
+    await scenario('direct interval entry invalidates preview and remains stable without stepper buttons', async () => {
       assert.equal(await input.getAttribute('type'), 'text');
-      const plus = page.locator('#midroll-helper-host').locator('#increase');
-      const minus = page.locator('#midroll-helper-host').locator('#decrease');
+      assert.equal(await page.locator('#midroll-helper-host').locator('#increase, #decrease').count(), 0);
       await preview();
-      await plus.click();
-      assert.equal(await input.inputValue(), '121');
+      await input.fill('121');
       assert.equal(await start.isDisabled(), true);
       await page.waitForTimeout(800);
       assert.equal(await input.inputValue(), '121');
-      await minus.click();
-      assert.equal(await input.inputValue(), '120');
-      await page.waitForTimeout(800);
-      assert.equal(await input.inputValue(), '120');
       await input.fill('1');
-      await minus.click();
+      await input.press('Tab');
       assert.equal(await input.inputValue(), '1');
     });
-    await scenario('holding the custom plus button has no auto-repeat; repeated keydown is ignored', async () => {
-      const plus = page.locator('#midroll-helper-host').locator('#increase');
-      const box = await plus.boundingBox();
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-      await page.mouse.down();
-      await page.waitForTimeout(1000);
-      assert.equal(await input.inputValue(), '120');
-      await page.mouse.up();
-      assert.equal(await input.inputValue(), '121');
-      await page.waitForTimeout(500);
-      assert.equal(await input.inputValue(), '121');
+    await scenario('holding arrow keys in the plain interval field never changes the number', async () => {
       await input.click();
       await page.keyboard.down('ArrowUp');
       await page.keyboard.down('ArrowUp');
+      await page.waitForTimeout(500);
       await page.keyboard.up('ArrowUp');
-      assert.equal(await input.inputValue(), '122');
+      await input.press('ArrowDown');
+      assert.equal(await input.inputValue(), '120');
+      assert.equal(await page.evaluate(() => fixture.clicks), 0);
     });
     await scenario('507-second player overrides an incorrect UI clock; 1:07:17 remains unchanged', async () => {
       await page.locator('.duration').evaluate((node) => { node.textContent = '0:20:00'; });

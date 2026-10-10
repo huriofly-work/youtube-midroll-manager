@@ -1,4 +1,4 @@
-# Chèn và dọn điểm quảng cáo YouTube — 0.1.15
+# Chèn và dọn điểm quảng cáo YouTube — 0.1.16
 
 Dành cho Chrome từ 118, YouTube Studio tiếng Việt, một video đang mở. Bạn xem lại và tự bấm Tiếp tục/Lưu. Không cần API key, OAuth hoặc cài Node.js.
 
@@ -7,7 +7,7 @@ Dành cho Chrome từ 118, YouTube Studio tiếng Việt, một video đang mở
 1. Giải nén ZIP vào một thư mục cố định, có `manifest.json` ngay bên trong.
 2. Mở `chrome://extensions`, bật **Chế độ dành cho nhà phát triển**, chọn **Tải tiện ích đã giải nén**, rồi chọn thư mục đó.
 3. Khi cập nhật, thay tệp trong đúng thư mục đã cài và bấm **Tải lại** extension. Nếu cài từ thư mục mã nguồn `extension`, chỉ cần Tải lại.
-4. Lưu các chỉnh sửa Studio muốn giữ trước khi F5 trang. Mở lại trình quảng cáo và kiểm tra bảng có **v0.1.15**.
+4. Lưu các chỉnh sửa Studio muốn giữ trước khi F5 trang. Mở lại trình quảng cáo và kiểm tra bảng có **v0.1.16**.
 
 Extension cần quyền debugger để giữ riêng tab Studio hoạt động khi bạn dùng ứng dụng khác. Chrome hiện thanh thông báo trong lúc chạy; phiên kết thúc khi xong, dừng hoặc gặp lỗi. Chấp nhận quyền/bật lại extension nếu Chrome yêu cầu.
 
@@ -16,7 +16,7 @@ Extension cần quyền debugger để giữ riêng tab Studio hoạt động kh
 1. Mở một video kiếm tiền dài tối thiểu 8 phút trong Studio, vào **Kiếm tiền → Quản lý vị trí quảng cáo**.
 2. Bấm biểu tượng extension, chọn tab **Chèn điểm**.
 3. Nhập bằng giây: **Đoạn đầu không chèn**, **Đoạn cuối không chèn**, **Khoảng cách giữa các điểm**. Hai đoạn cho phép 0; khoảng cách phải là số nguyên lớn hơn 0. Đoạn cuối tính lùi từ cuối video. Các giá trị dùng khi xem trước được nhớ trên máy.
-4. Bấm **Xem trước** để tự đọc lại thời lượng và các điểm hiện có. Không cần nhập thời lượng. Kiểm tra các mốc rồi bấm **Chèn điểm**.
+4. Bấm **Xem trước** để tự đọc lại thời lượng và các điểm hiện có. Không cần nhập thời lượng. Kiểm tra các mốc rồi bấm **Chèn N điểm**.
 5. Kiểm tra toàn bộ danh sách trong Studio, tự bấm **Tiếp tục/Lưu**.
 
 Điểm đầu bằng đoạn đầu bạn nhập; mỗi mốc tiếp theo cộng khoảng cách. Mốc mới không nằm trong đoạn cuối và luôn trước thời điểm video kết thúc. Ví dụ video 10 phút, đoạn đầu 90 giây, đoạn cuối 150 giây, khoảng cách 120 giây: 01:30, 03:30, 05:30, 07:30.
@@ -26,8 +26,8 @@ Luồng chèn giữ mọi điểm có sẵn, kể cả trong đoạn đầu/cu�
 ## Dọn điểm
 
 1. Chọn tab **Dọn điểm**. Nhập **Đoạn đầu không chèn**, **Đoạn cuối không chèn** bằng số giây nguyên từ 0 trở lên và **Khoảng cách tối thiểu khi dọn** bằng số giây nguyên lớn hơn 0. Tổng hai đoạn phải nhỏ hơn thời lượng video. Hai ô dọn có cài đặt riêng với tab Chèn điểm, mặc định 0 và được nhớ sau khi xem trước.
-2. Bấm **Xem trước dọn**. Bước này tự đọc lại dữ liệu mới và chưa xóa điểm nào.
-3. Kiểm tra các mốc và lý do, rồi bấm **Dọn điểm**.
+2. Trong tab Dọn, bấm **Xem trước**. Bước này tự đọc lại dữ liệu mới và chưa xóa điểm nào.
+3. Kiểm tra các mốc và lý do, rồi bấm **Dọn N điểm**.
 4. Kiểm tra kết quả trong Studio và tự bấm **Tiếp tục/Lưu**.
 
 Quy tắc áp dụng cho tất cả điểm thủ công, gồm điểm có sẵn:
@@ -41,9 +41,17 @@ Quy tắc áp dụng cho tất cả điểm thủ công, gồm điểm có sẵn
 
 Tool vẫn bấm xóa riêng từng điểm. Khi Studio cập nhật ngay, nhiều lượt dùng chung thời gian chờ; đây không phải thao tác Xóa tất cả. Nếu loại/trạng thái điểm thủ công, danh sách hoặc cài đặt quảng cáo tự động thay đổi sau xem trước, hãy xem trước lại. Thay đổi các ô cài đặt cũng bỏ kế hoạch cũ. Thay đổi trạng thái xét duyệt của điểm tự động/chưa rõ loại không làm chúng bị chọn xóa. Nếu ranh giới đoạn cuối có phần lẻ giây nhưng mốc Studio cùng giây dùng bộ đếm không rõ đơn vị, tool dừng trước khi xóa thay vì đoán vị trí.
 
+## Đọc giao diện
+
+- Các ô đều nhập số giây; dòng dưới ô quy đổi sang phút/giờ để đối chiếu. Ô sai hiển thị viền đỏ và hướng dẫn sửa.
+- Tab và thanh nút luôn hiện khi cuộn nội dung. Nút chạy ghi số điểm từ kế hoạch mới nhất; phải xem trước trước khi chạy.
+- Khi chạy, thanh tiến độ chỉ đếm điểm đã xác nhận. Bạn có thể dùng ứng dụng khác; nút **Dừng** vẫn nằm ở cuối bảng.
+- Sau chạy hoặc dừng/lỗi, phần **Kế hoạch lần chạy vừa rồi** dùng để đối chiếu, không phải danh sách kết quả đã xác nhận. Đọc thông báo số điểm đã xác nhận và kiểm tra thực tế trong Studio. Bấm Xem trước lại để chạy tiếp.
+- Ví dụ dọn với khoảng cách tối thiểu 120 giây: điểm thủ công 02:01 bị chọn xóa nếu có điểm tự động 03:00, vì chỉ cách 59 giây. Hai đoạn đầu/cuối không thay thế quy tắc khoảng cách.
+
 ## Tải dữ liệu và làm việc khác
 
-**Xem trước** và **Xem trước dọn** đều tự đọc lại dữ liệu, nên thường không cần bấm Tải lại trước đó. Dùng **Tải lại dữ liệu** khi bạn chỉ muốn kiểm tra thời lượng và trạng thái mới; nút này không tải lại trang, không yêu cầu YouTube đánh giá lại và không thay đổi điểm nào. Chuyển tab giữ cài đặt, bỏ kế hoạch cũ và đọc dữ liệu cho chức năng mới.
+**Xem trước** ở cả hai tab đều tự đọc lại dữ liệu, nên thường không cần bấm Tải lại trước đó. Dùng **Tải lại dữ liệu** khi bạn chỉ muốn kiểm tra thời lượng và trạng thái mới; nút này không tải lại trang, không yêu cầu YouTube đánh giá lại và không thay đổi điểm nào. Chuyển tab giữ cài đặt, bỏ kế hoạch cũ và đọc dữ liệu cho chức năng mới.
 
 Sau khi bắt đầu, có thể dùng ứng dụng khác hoặc thu nhỏ Chrome. Máy phải còn thức, Chrome phải chạy, video và trình quảng cáo phải giữ nguyên. Extension không đưa Chrome lên trước hoặc chiếm chuột/bàn phím. Không đóng/chuyển video, mở DevTools của tab đó hoặc bấm Hủy trên thanh điều khiển Chrome trong lúc chạy. Dùng nút **Dừng** để dừng bình thường.
 

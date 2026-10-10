@@ -1,3 +1,21 @@
+# Kiểm chứng bản 0.1.16
+
+Thiết kế lại toàn bộ giao diện popup và bảng trong Studio, đồng nhất các ô nhập trực tiếp số giây và bỏ nút cộng/trừ. Thuật toán và cơ chế chạy nền giữ nguyên.
+
+- 92 kiểm thử logic đạt.
+- 61 tình huống chèn browser đạt; thay hai bài kiểm tra nút cộng/trừ bằng nhập trực tiếp, bỏ preview cũ và giữ phím mũi tên không tự tăng giảm.
+- 38 tình huống dọn/margin browser đạt; vẫn giữ mọi điểm tự động/chưa rõ loại và không tự Lưu.
+- 6 popup đạt; thêm kiểm tra báo cáo lỗi lấy đúng phiên bản manifest và thông báo dài không tràn ngang ở 300 px.
+- 6 UI đạt: hai tab/thanh thao tác cố định ở 320×568, 640×480, 1366×900 sau cuộn/xem trước; quy đổi giây, đầu vào sai, bàn phím và vô hiệu hóa kế hoạch; giải thích manual 02:01 bị xóa vì auto 03:00; giữ kế hoạch đã dùng để đối chiếu; tiến độ/Dừng trong cửa sổ ngắn và khóa ô nhập khi chạy. Preview danh sách một điểm được kiểm tra nằm trong phần đang nhìn thấy.
+- 3 Chrome thu nhỏ đạt qua CDP/profile tạm và cầu Chrome API: chèn, hủy và dọn. Cửa sổ giữ minimized, focus emulation được phục hồi và điểm tự động/chưa rõ ở hai đầu được giữ. Sau lần chạy này, thay đổi cuối chỉ bỏ điều khiển tăng/giảm của giao diện.
+- Đã kiểm tra trực quan ảnh ui-insert/cleanup với ba kích thước, ui-cleanup-plan, ui-running, popup-preview và ui-popup-error. Tab/nút chạy/Dừng không bị cuộn khuất, không tràn ngang, màu/nhãn phân biệt chèn và dọn. Ảnh kiểm chứng v0.1.15 được giữ nguyên; ảnh mới có phiên bản riêng.
+- Cú pháp toàn bộ JS/CJS, Git whitespace, phiên bản và quyền đạt. Phiên bản 0.1.16; quyền activeTab/scripting/storage/debugger không đổi.
+- ZIP 17 tệp, 46.272 byte; CRC và từng byte khớp nguồn. SHA-256: `54aee4b50e85731a3be06bef42b8aa881e1f65172b231de764826db23c981d38`.
+
+Các kiểm tra dùng fixture và hồ sơ Chrome tạm. Chưa kiểm chứng UI mới, DOM/cảnh báo, Lưu hoặc phân phát quảng cáo trên YouTube Studio thật. Các phần dưới là lịch sử.
+
+---
+
 # Kiểm chứng bản 0.1.15 — 10/10/2026
 
 Thêm đoạn đầu/cuối trong tab Dọn điểm; chỉ chọn điểm thủ công ngoài khoảng được phép. Hai ô riêng với tab Chèn điểm, mặc định 0, lưu sau xem trước. Mốc đúng ranh giới được giữ nếu không vướng quy tắc khác. Mọi điểm tự động và chưa rõ loại luôn được bảo vệ, kể cả ở hai đầu video hoặc trùng thời gian với mục tiêu thủ công.

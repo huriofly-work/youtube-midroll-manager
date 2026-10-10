@@ -1,14 +1,14 @@
 # Tự động chèn và dọn điểm quảng cáo YouTube
 
-Bản **0.1.15** cho Chrome từ 118 và YouTube Studio tiếng Việt, một video đang mở. Thời lượng đọc tự động; bạn nhập khoảng cách và đoạn đầu/cuối bằng giây. Khi chèn, giữ mọi điểm cũ. Khi dọn, xóa điểm thủ công trong các đoạn đầu/cuối bạn nhập, Đang xem xét/có cảnh báo và lọc các điểm còn lại quá gần, giữ điểm sớm hơn. Luôn giữ mọi điểm tự động và điểm chưa rõ loại. Bạn xem lại và tự Lưu.
+Bản **0.1.16** cho Chrome từ 118 và YouTube Studio tiếng Việt, một video đang mở. Thời lượng đọc tự động; bạn nhập khoảng cách và đoạn đầu/cuối bằng giây. Khi chèn, giữ mọi điểm cũ. Khi dọn, xóa điểm thủ công trong các đoạn đầu/cuối bạn nhập, Đang xem xét/có cảnh báo và lọc các điểm còn lại quá gần, giữ điểm sớm hơn. Luôn giữ mọi điểm tự động và điểm chưa rõ loại. Bạn xem lại và tự Lưu.
 
-Bản này thêm hai ô đoạn đầu/cuối riêng cho tab Dọn điểm, mặc định 0 để giữ cách dọn cũ khi chưa nhập. Preview ghi rõ lý do xóa; luôn bảo vệ điểm tự động, kể cả trong đoạn loại trừ hoặc có cảnh báo/Đang xem xét. Các kiểm tra bảo vệ và tối ưu của 0.1.14 được giữ.
+Giao diện mới cố định tab và thanh thao tác, gom cài đặt theo chức năng, quy đổi giây sang phút và ghi rõ lý do xóa. Nút chạy hiển thị số điểm trong kế hoạch; khi chạy có tiến độ đã xác nhận và nút Dừng. Tab Dọn giải thích điểm thủ công quá gần điểm tự động ở trước hoặc sau đều được chọn xóa. Sau chạy, giữ kế hoạch để đối chiếu và yêu cầu xem trước lại trước lượt tiếp theo.
 
 [Hướng dẫn cài và dùng](extension/HUONG-DAN.md) · [Rà soát toàn bộ](artifacts/AUDIT-0.1.14.md) · [Kiểm chứng](artifacts/VERIFICATION.md) · [Lịch sử](CHANGELOG.md).
 
 ## Tải bản cài
 
-Mở [GitHub Releases](https://github.com/HurioFly/youtube-midroll-manager/releases/latest), tải `Chen-quang-cao-YouTube-v0.1.15.zip`, giải nén vào một thư mục cố định. Trong Chrome, mở `chrome://extensions`, bật **Chế độ dành cho nhà phát triển**, chọn **Tải tiện ích đã giải nén** rồi chọn thư mục có `manifest.json`.
+Mở [GitHub Releases](https://github.com/HurioFly/youtube-midroll-manager/releases/latest), tải `Chen-quang-cao-YouTube-v0.1.16.zip`, giải nén vào một thư mục cố định. Trong Chrome, mở `chrome://extensions`, bật **Chế độ dành cho nhà phát triển**, chọn **Tải tiện ích đã giải nén** rồi chọn thư mục có `manifest.json`.
 
 Repository và bản phát hành là **riêng tư**, cần đăng nhập tài khoản được cấp quyền để tải. Đây là bản phát hành GitHub để cài thủ công. Khi cập nhật, lưu chỉnh sửa đang dở, thay tệp trong thư mục extension, bấm **Tải lại** extension rồi F5 Studio.
 
@@ -27,6 +27,7 @@ npm test
 npm run test:browser
 npm run test:cleanup
 npm run test:popup
+npm run test:ui
 npm run test:background
 npm run test:audit-performance
 ```
@@ -41,4 +42,4 @@ $env:CHROME_TEST_PATH = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
 
 Không coi kiểm thử cục bộ là xác nhận Studio thật, YouTube đã lưu hoặc quảng cáo đã được phân phát.
 
-GitHub Actions chạy kiểm thử logic và ba bộ fixture trình duyệt sau mỗi lần push/PR. Kiểm thử Chrome thu nhỏ và benchmark vẫn chạy riêng tại máy có môi trường phù hợp.
+GitHub Actions chạy kiểm thử logic và bốn bộ fixture trình duyệt (chèn, dọn, popup và giao diện) sau mỗi lần push/PR. Kiểm thử Chrome thu nhỏ và benchmark vẫn chạy riêng tại máy có môi trường phù hợp.

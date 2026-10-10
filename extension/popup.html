@@ -1,18 +1,20 @@
 <!doctype html>
 <html lang="vi">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Chèn điểm quảng cáo YouTube</title>
 <link rel="stylesheet" href="popup.css">
+</head>
+<body>
 <main>
-  <h1>Chèn điểm quảng cáo</h1>
-  <p class="subtitle">Một video · Bạn tự xem lại và lưu · v0.1.15</p>
+  <header><div><h1>Điểm quảng cáo YouTube</h1><p class="subtitle">Chèn và dọn · Một video đang mở</p></div><span id="version">v0.1.16</span></header>
   <p id="status" role="status" aria-live="polite">Đang kiểm tra trang đang mở…</p>
   <section id="guide" hidden>
     <ol>
       <li>Mở một video đã bật kiếm tiền trong YouTube Studio.</li>
       <li>Vào <strong>Kiếm tiền → Quản lý vị trí quảng cáo</strong>.</li>
-      <li>Bấm biểu tượng extension để nhập khoảng cách và chèn điểm.</li>
+      <li>Bấm biểu tượng extension, chọn <strong>Chèn điểm</strong> hoặc <strong>Dọn điểm</strong> rồi xem trước.</li>
     </ol>
     <a href="https://studio.youtube.com/" target="_blank" rel="noopener noreferrer">Mở YouTube Studio</a>
   </section>
@@ -20,7 +22,9 @@
   <button id="copy-error" type="button" hidden>Sao chép thông tin lỗi</button>
   <p id="copy-status" role="status" hidden></p>
   <textarea id="error-details" readonly hidden aria-label="Thông tin lỗi để sao chép"></textarea>
+  <p class="save-note">Sau khi chạy, kiểm tra kết quả rồi tự bấm Tiếp tục/Lưu trong Studio.</p>
 </main>
 <script src="error-copy.js"></script>
 <script src="popup.js"></script>
+</body>
 </html>
