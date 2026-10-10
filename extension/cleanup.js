@@ -13,17 +13,37 @@
     return counter(later) < counter(earlier);
   }
 
-  function makePlan(snapshot, minimum) {
+  function makePlan(snapshot, minimum, options = {}) {
     const spacing = root.MidrollPlanner.secondsSetting(minimum, "Khoảng cách tối thiểu");
+    const start = root.MidrollPlanner.secondsSetting(options.startSeconds ?? 0, "Đoạn đầu khi dọn", true);
+    const endMargin = root.MidrollPlanner.secondsSetting(options.endMarginSeconds ?? 0, "Đoạn cuối khi dọn", true);
     const rows = snapshot.rows;
     if (!Number.isFinite(snapshot.duration) || snapshot.duration <= 0 || !Array.isArray(rows) || rows.some((row) => !Number.isFinite(row.seconds) || row.seconds < 0 || row.seconds > snapshot.duration)) {
       throw new Error("Không đọc được đầy đủ thời gian các điểm; chưa dọn điểm nào.");
     }
+    if (start + endMargin >= snapshot.duration) throw new Error("Tổng đoạn đầu và đoạn cuối phải nhỏ hơn độ dài video. Chưa dọn điểm nào.");
+    const end = snapshot.duration - endMargin;
     const removals = [];
     const automatic = rows.filter((row) => row.kind === "automatic").sort(compare);
     const eligible = rows.filter((row) => row.kind === "manual");
-    for (const row of eligible.filter((row) => row.pending || row.warning)) removals.push({ key: key(row), raw: row.raw, seconds: row.seconds, reason: row.pending ? "Đang xem xét" : "Cảnh báo của YouTube" });
-    const suitable = eligible.filter((row) => !row.pending && !row.warning);
+    const suitable = [];
+    let marginRemovals = 0;
+    for (const row of eligible) {
+      let reason = row.pending ? "Đang xem xét" : row.warning ? "Cảnh báo của YouTube" : null;
+      if (!reason && start > 0 && row.seconds < start) reason = "Trong đoạn đầu không chèn";
+      if (!reason && endMargin > 0) {
+        // Studio's unknown-unit counter cannot locate a slot relative to
+        // a fractional-second cutoff in the same whole second.
+        if (!Number.isInteger(end) && counter(row) > 0 && row.seconds === Math.floor(end)) {
+          throw new Error("Không xác định chắc chắn phần nhỏ giây tại ranh giới đoạn cuối. Chưa dọn điểm nào; hãy kiểm tra thời gian trong Studio.");
+        }
+        if (row.seconds > end || (row.seconds === end && counter(row) > 0)) reason = "Trong đoạn cuối không chèn";
+      }
+      if (reason) {
+        if (reason.startsWith("Trong đoạn")) marginRemovals++;
+        removals.push({ key: key(row), raw: row.raw, seconds: row.seconds, reason });
+      } else suitable.push(row);
+    }
     const spacingRows = [...automatic, ...suitable];
     // Frame counters have an unknown unit. Mixing nonzero counters with
     // decimal seconds makes the actual order/gap unknowable without FPS.
@@ -41,7 +61,7 @@
     const unavailable = new Set(rows.filter((row) => row.canRemove === false).map(key));
     if (removals.some((target) => unavailable.has(target.key))) throw new Error("Một điểm thủ công cần dọn không có nút Xóa khả dụng. Chưa xóa điểm nào; hãy kiểm tra Studio và Xem trước dọn lại.");
     return {
-      fingerprint: snapshot.cleanupFingerprint, spacing,
+      fingerprint: snapshot.cleanupFingerprint, spacing, start, endMargin, end, marginRemovals,
       removals: removals.sort(compare),
       automatic: automatic.length, unknown: rows.filter((row) => row.kind === "unknown").length,
       pending: rows.filter((row) => row.pending).length,

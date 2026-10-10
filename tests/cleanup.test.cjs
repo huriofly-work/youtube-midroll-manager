@@ -175,3 +175,67 @@ test('a delete control becoming unavailable after preview blocks the entire next
   const plan = C.makePlan(a.cleanupSnapshot(), 60); rows[1].canRemove = false;
   await assert.rejects(C.runPlan(a, plan), /Chưa xóa nhóm này/); assert.equal(groups, 0);
 });
+
+test('cleanup margins delete only manual slots outside the inclusive allowed window', () => {
+  const rows = [row(0), row(59), row(60), row(600), row(1140), row(1141), row(1200),
+    row(0, 'automatic', true, true), row(1200, 'automatic', true, true), row(20, 'unknown', true, true)];
+  const plan = C.makePlan(snapshot(rows), 1, { startSeconds: 60, endMarginSeconds: 60 });
+  assert.deepEqual(plan.removals.map((r) => r.seconds), [0, 59, 1141, 1200]);
+  assert.equal(plan.marginRemovals, 4); assert.equal(plan.automatic, 2); assert.equal(plan.unknown, 1);
+  assert.deepEqual(plan.removals.map((r) => r.reason), ['Trong đoạn đầu không chèn', 'Trong đoạn đầu không chèn', 'Trong đoạn cuối không chèn', 'Trong đoạn cuối không chèn']);
+});
+
+test('zero cleanup margins disable boundary deletion and invalid margins never produce a plan', () => {
+  const rows = [row(0), row(1200)];
+  assert.deepEqual(C.makePlan(snapshot(rows), 1).removals, []);
+  for (const options of [{ startSeconds: '' }, { endMarginSeconds: '-1' }, { startSeconds: '1.5' }, { startSeconds: 600, endMarginSeconds: 600 }, { endMarginSeconds: 1201 }]) {
+    assert.throws(() => C.makePlan(snapshot(rows), 1, options));
+  }
+});
+
+test('subsecond cleanup boundaries keep the start counter and remove a nonzero end counter without guessing FPS', () => {
+  const rows = [row(59, 'manual', false, false, '0:59:99'), row(60, 'manual', false, false, '1:00:17'),
+    row(1140, 'manual', false, false, '19:00:00'), row(1140, 'manual', false, false, '19:00:17')];
+  const plan = C.makePlan(snapshot(rows), 1, { startSeconds: 60, endMarginSeconds: 60 });
+  assert.deepEqual(plan.removals.map((r) => r.raw), ['0:59:99', '19:00:17']);
+  assert.equal(C.makePlan({ ...snapshot([row(60.5, 'manual', false, false, '1:00.500'), row(1140.5, 'manual', false, false, '19:00.500')]), duration: 1200.5 }, 1, { startSeconds: 60, endMarginSeconds: 60 }).removals.length, 0);
+  const frame = row(1140, 'manual', false, false, '19:00:17');
+  assert.throws(() => C.makePlan({ ...snapshot([frame]), duration: 1200.5 }, 1, { endMarginSeconds: 60 }), /ranh giới đoạn cuối/);
+  assert.equal(C.makePlan({ ...snapshot([{ ...frame, kind: 'automatic', warning: true, pending: true }]), duration: 1200.5 }, 1, { endMarginSeconds: 60 }).removals.length, 0);
+});
+
+test('margin removals do not anchor manual spacing, and flagged margin slots are removed only once', () => {
+  const rows = [row(59), row(60), row(61), row(1190, 'manual', true, true)];
+  const plan = C.makePlan(snapshot(rows), 60, { startSeconds: 60, endMarginSeconds: 60 });
+  assert.deepEqual(plan.removals.map((r) => r.seconds), [59, 61, 1190]);
+  assert.equal(plan.reviewRemovals, 1); assert.equal(plan.marginRemovals, 1);
+});
+
+test('single and grouped margin cleanup preserve every automatic and unknown occurrence in excluded regions', async () => {
+  for (const grouped of [false, true]) {
+    const rows = [row(0), row(0, 'automatic', true, true), row(0, 'unknown', true, true), row(1190), row(1190, 'automatic'), row(500)];
+    const a = adapter(rows);
+    if (grouped) a.removePoints = async (targets) => {
+      for (const target of targets) await a.removePoint(target.key, { expectedFingerprint: C.signature(rows) });
+      return { removed: targets.length };
+    };
+    const plan = C.makePlan(a.cleanupSnapshot(), 1, { startSeconds: 60, endMarginSeconds: 60 });
+    assert.deepEqual(await C.runPlan(a, plan), { removed: 2 });
+    assert.deepEqual(rows.map((r) => [r.seconds, r.kind]), [[0, 'automatic'], [0, 'unknown'], [1190, 'automatic'], [500, 'manual']]);
+  }
+});
+
+test('cleanup with randomized margins agrees with independent interval and spacing selection', () => {
+  let seed = 19339;
+  const random = () => ((seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32);
+  for (let trial = 0; trial < 300; trial++) {
+    const start = Math.floor(random() * 500), tail = Math.floor(random() * 500), spacing = 1 + Math.floor(random() * 200);
+    const rows = Array.from({ length: 100 }, () => row(Math.floor(random() * 1201), ['manual', 'automatic', 'unknown'][Math.floor(random() * 3)], random() < .1, random() < .1));
+    const autos = rows.filter((r) => r.kind === 'automatic'), kept = [], expected = [];
+    for (const r of rows.filter((r) => r.kind === 'manual').sort((a, b) => a.seconds - b.seconds)) {
+      if (r.pending || r.warning || (start > 0 && r.seconds < start) || (tail > 0 && r.seconds > 1200 - tail) || [...autos, ...kept].some((anchor) => Math.abs(anchor.seconds - r.seconds) < spacing)) expected.push(r);
+      else kept.push(r);
+    }
+    assert.deepEqual(C.makePlan(snapshot(rows), spacing, { startSeconds: start, endMarginSeconds: tail }).removals.map((r) => r.key).sort(), expected.map(C.key).sort());
+  }
+});

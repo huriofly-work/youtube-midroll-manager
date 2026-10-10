@@ -1,5 +1,7 @@
 # Lịch sử thay đổi
 
+0.1.15: thêm hai ô đoạn đầu/cuối riêng trong tab Dọn điểm, ghi nhớ cài đặt, mặc định 0. Xóa các điểm thủ công ngoài cửa sổ được phép, giữ mốc đúng ranh giới; luôn giữ mọi điểm tự động và chưa rõ loại, kể cả trong hai đoạn loại trừ. Preview ghi lý do, đổi ô nhập hủy preview. Kiểm tra bộ đếm phần nhỏ giây tại ranh giới cuối và dừng trước khi xóa nếu không so sánh được chắc chắn. Quy tắc Đang xem xét/cảnh báo/khoảng cách và việc tự Lưu giữ nguyên.
+
 0.1.14: rà soát đầy đủ thuật toán và vòng đời, sửa thứ tự phần nhỏ giây, loading/help false positives, điểm bất biến/tự động mới, metadata và availability. Tối ưu đọc DOM/commit microtask, mở lại bảng và IPC abort. Rút hướng dẫn và sửa kiểm thử/benchmark. Chi tiết ở artifacts/AUDIT-0.1.14.md.
 
 0.1.13 đổi quy tắc dọn theo yêu cầu: xóa tất cả điểm **thủ công Đang xem xét**, kể cả điểm có sẵn và điểm không có cảnh báo, không phụ thuộc khoảng cách. Sau đó xóa điểm thủ công có cảnh báo và lọc khoảng cách giữa các điểm còn lại. Mọi điểm tự động và điểm chưa rõ loại vẫn được giữ. Preview ghi lý do Đang xem xét và số điểm sẽ xóa; thay đổi trạng thái sau preview vẫn yêu cầu xem trước lại. Không tự lưu.

@@ -1,4 +1,4 @@
-# Chèn và dọn điểm quảng cáo YouTube — 0.1.14
+# Chèn và dọn điểm quảng cáo YouTube — 0.1.15
 
 Dành cho Chrome từ 118, YouTube Studio tiếng Việt, một video đang mở. Bạn xem lại và tự bấm Tiếp tục/Lưu. Không cần API key, OAuth hoặc cài Node.js.
 
@@ -7,7 +7,7 @@ Dành cho Chrome từ 118, YouTube Studio tiếng Việt, một video đang mở
 1. Giải nén ZIP vào một thư mục cố định, có `manifest.json` ngay bên trong.
 2. Mở `chrome://extensions`, bật **Chế độ dành cho nhà phát triển**, chọn **Tải tiện ích đã giải nén**, rồi chọn thư mục đó.
 3. Khi cập nhật, thay tệp trong đúng thư mục đã cài và bấm **Tải lại** extension. Nếu cài từ thư mục mã nguồn `extension`, chỉ cần Tải lại.
-4. Lưu các chỉnh sửa Studio muốn giữ trước khi F5 trang. Mở lại trình quảng cáo và kiểm tra bảng có **v0.1.14**.
+4. Lưu các chỉnh sửa Studio muốn giữ trước khi F5 trang. Mở lại trình quảng cáo và kiểm tra bảng có **v0.1.15**.
 
 Extension cần quyền debugger để giữ riêng tab Studio hoạt động khi bạn dùng ứng dụng khác. Chrome hiện thanh thông báo trong lúc chạy; phiên kết thúc khi xong, dừng hoặc gặp lỗi. Chấp nhận quyền/bật lại extension nếu Chrome yêu cầu.
 
@@ -25,20 +25,21 @@ Luồng chèn giữ mọi điểm có sẵn, kể cả trong đoạn đầu/cu�
 
 ## Dọn điểm
 
-1. Chọn tab **Dọn điểm** và nhập **Khoảng cách tối thiểu khi dọn** bằng số giây nguyên lớn hơn 0.
+1. Chọn tab **Dọn điểm**. Nhập **Đoạn đầu không chèn**, **Đoạn cuối không chèn** bằng số giây nguyên từ 0 trở lên và **Khoảng cách tối thiểu khi dọn** bằng số giây nguyên lớn hơn 0. Tổng hai đoạn phải nhỏ hơn thời lượng video. Hai ô dọn có cài đặt riêng với tab Chèn điểm, mặc định 0 và được nhớ sau khi xem trước.
 2. Bấm **Xem trước dọn**. Bước này tự đọc lại dữ liệu mới và chưa xóa điểm nào.
 3. Kiểm tra các mốc và lý do, rồi bấm **Dọn điểm**.
 4. Kiểm tra kết quả trong Studio và tự bấm **Tiếp tục/Lưu**.
 
 Quy tắc áp dụng cho tất cả điểm thủ công, gồm điểm có sẵn:
 
+- Xóa điểm thủ công trước mốc đầu và sau mốc cuối tính lùi từ cuối video. Nhập 0 để bỏ qua đoạn tương ứng. Giữ mốc đúng ranh giới nếu không vướng quy tắc dọn khác. Ví dụ video 10 phút, chừa đầu/cuối 60 giây: xóa điểm thủ công trước 01:00 và sau 09:00; mốc 01:00:00 và 09:00:00 được giữ, 09:00:17 nằm sau ranh giới nên được chọn xóa.
 - Xóa điểm thủ công **Đang xem xét** (vòng tròn dấu hỏi), kể cả không có cảnh báo và không gần điểm khác. Không cần đợi mọi điểm có kết quả.
 - Xóa điểm thủ công có cảnh báo chất lượng của YouTube.
 - Với các điểm thủ công còn lại, giữ điểm sớm hơn và xóa điểm sau nếu gần hơn khoảng cách tối thiểu. Có so sánh phần nhỏ giây khi hai mốc cùng giây hoặc ở ranh giới khoảng cách. Nếu trộn bộ đếm phần nhỏ giây khác 0 với giây thập phân, tool dừng vì không thể so sánh chắc chắn khi chưa biết đơn vị bộ đếm.
-- Giữ mọi điểm tự động. Điểm thủ công quá gần điểm tự động được chọn xóa dù nằm trước nó. Các điểm tự động vẫn được giữ nếu gần nhau.
+- Luôn giữ mọi điểm tự động, kể cả trong hai đoạn đầu/cuối, có cảnh báo hoặc Đang xem xét. Điểm thủ công quá gần điểm tự động được chọn xóa dù nằm trước nó. Các điểm tự động vẫn được giữ nếu gần nhau.
 - Giữ điểm chưa xác định được loại. Trạng thái đang tải/xử lý không được coi là Đang xem xét; tool dừng để chờ dữ liệu đầy đủ.
 
-Tool vẫn bấm xóa riêng từng điểm. Khi Studio cập nhật ngay, nhiều lượt dùng chung thời gian chờ; đây không phải thao tác Xóa tất cả. Nếu loại/trạng thái điểm thủ công, danh sách hoặc cài đặt quảng cáo tự động thay đổi sau xem trước, hãy xem trước lại. Thay đổi trạng thái xét duyệt của điểm tự động/chưa rõ loại không làm chúng bị chọn xóa.
+Tool vẫn bấm xóa riêng từng điểm. Khi Studio cập nhật ngay, nhiều lượt dùng chung thời gian chờ; đây không phải thao tác Xóa tất cả. Nếu loại/trạng thái điểm thủ công, danh sách hoặc cài đặt quảng cáo tự động thay đổi sau xem trước, hãy xem trước lại. Thay đổi các ô cài đặt cũng bỏ kế hoạch cũ. Thay đổi trạng thái xét duyệt của điểm tự động/chưa rõ loại không làm chúng bị chọn xóa. Nếu ranh giới đoạn cuối có phần lẻ giây nhưng mốc Studio cùng giây dùng bộ đếm không rõ đơn vị, tool dừng trước khi xóa thay vì đoán vị trí.
 
 ## Tải dữ liệu và làm việc khác
 
@@ -56,6 +57,6 @@ Nếu Studio chưa cung cấp thời lượng, dữ liệu thuộc video khác, 
 
 ## Giới hạn kiểm chứng
 
-Các kiểm thử dùng trang Studio mô phỏng và Chrome với hồ sơ tạm. Chưa kiểm chứng DOM, trạng thái điểm hoặc lưu thực tế trên tài khoản Studio của bạn. Một danh sách ảo không khai báo tổng số hàng vẫn có thể chưa được nhận diện; cấu trúc không rõ phải kiểm tra thủ công. Báo cáo rà soát và kết quả nằm trong `artifacts/AUDIT-0.1.14.md` và `artifacts/VERIFICATION.md` của mã nguồn.
+Các kiểm thử dùng trang Studio mô phỏng và Chrome với hồ sơ tạm. Chưa kiểm chứng DOM, trạng thái điểm hoặc lưu thực tế trên tài khoản Studio của bạn. Một danh sách ảo không khai báo tổng số hàng vẫn có thể chưa được nhận diện; cấu trúc không rõ phải kiểm tra thủ công. Báo cáo rà soát trước nằm trong `artifacts/AUDIT-0.1.14.md`, kết quả các phiên bản nằm trong `artifacts/VERIFICATION.md` của mã nguồn.
 
 Hoàn tất nghĩa là các điểm đã được đọc lại đúng trong trình chỉnh sửa. Bạn vẫn phải lưu; điểm chèn không bảo đảm quảng cáo được phân phát, theo [YouTube Trợ giúp](https://support.google.com/youtube/answer/6175006?hl=vi).

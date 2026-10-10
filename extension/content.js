@@ -59,7 +59,7 @@
       footer { color: #64748b; font-size: 11px; padding-top: 14px; }
     </style>
     <section class="panel" aria-label="Chèn điểm quảng cáo YouTube">
-        <header><div><h2>Chèn và dọn điểm quảng cáo</h2><p class="subtitle">Một video · Bạn tự xem lại và lưu · v0.1.14</p></div><button id="close" type="button" title="Ẩn bảng điều khiển" aria-label="Ẩn bảng điều khiển">×</button></header>
+        <header><div><h2>Chèn và dọn điểm quảng cáo</h2><p class="subtitle">Một video · Bạn tự xem lại và lưu · v0.1.15</p></div><button id="close" type="button" title="Ẩn bảng điều khiển" aria-label="Ẩn bảng điều khiển">×</button></header>
       <main>
         <div class="tabs" role="tablist" aria-label="Chức năng quảng cáo"><button id="tab-insert" role="tab" aria-selected="true" aria-controls="insert-panel" type="button">Chèn điểm</button><button id="tab-cleanup" role="tab" aria-selected="false" aria-controls="cleanup-panel" tabindex="-1" type="button">Dọn điểm</button></div>
         <div class="data">
@@ -78,8 +78,10 @@
         <div class="actions"><button id="read">Xem trước</button><button id="start" class="primary" disabled>Chèn điểm</button></div>
         </section>
         <section id="cleanup-panel" role="tabpanel" aria-labelledby="tab-cleanup" hidden>
+          <div class="limits"><div><label for="cleanup-start-margin">Đoạn đầu không chèn (giây)</label><input id="cleanup-start-margin" type="text" value="0" inputmode="numeric" autocomplete="off"></div><div><label for="cleanup-end-margin">Đoạn cuối không chèn (giây)</label><input id="cleanup-end-margin" type="text" value="0" inputmode="numeric" autocomplete="off"></div></div>
+          <p class="help">Xóa điểm thủ công trước mốc đầu và sau mốc tính lùi từ cuối video. Giữ mốc đúng ranh giới; nhập 0 để bỏ qua đoạn đó. Luôn giữ mọi điểm tự động.</p>
           <label for="minimum-spacing">Khoảng cách tối thiểu khi dọn (giây)</label><input id="minimum-spacing" type="text" value="120" inputmode="numeric" autocomplete="off">
-          <p class="help">Xóa điểm thủ công Đang xem xét hoặc có cảnh báo đỏ, rồi lọc các điểm thủ công còn lại quá gần nhau. Giữ điểm sớm hơn; giữ mọi điểm tự động và điểm chưa rõ loại. Áp dụng cả điểm thủ công có sẵn.</p>
+          <p class="help">Xóa điểm thủ công trong hai đoạn trên, Đang xem xét hoặc có cảnh báo đỏ, rồi lọc các điểm thủ công còn lại quá gần nhau. Giữ điểm sớm hơn; luôn giữ mọi điểm tự động và điểm chưa rõ loại. Áp dụng cả điểm thủ công có sẵn.</p>
           <p class="help">Xem trước dọn tự đọc lại dữ liệu. Tải lại dữ liệu dùng khi bạn chỉ muốn cập nhật trạng thái.</p>
           <div class="actions"><button id="cleanup-read">Xem trước dọn</button><button id="cleanup-start" class="primary" disabled>Dọn điểm</button></div>
         </section>
@@ -152,7 +154,7 @@
     $("preview").hidden = true;
   }
   function busy(value) {
-    for (const id of ["start-margin", "end-margin", "minimum-spacing", "tab-insert", "tab-cleanup"]) $(id).disabled = value;
+    for (const id of ["start-margin", "end-margin", "cleanup-start-margin", "cleanup-end-margin", "minimum-spacing", "tab-insert", "tab-cleanup"]) $(id).disabled = value;
     $("interval").disabled = value;
     $("decrease").disabled = value;
     $("increase").disabled = value;
@@ -166,13 +168,13 @@
     $("cleanup-start").disabled = value || !cleanupPlan?.removals.length;
   }
 
-  chrome.storage.local.get({ intervalSeconds: 120, startSeconds: 60, endMarginSeconds: 60, minimumSpacingSeconds: 120 }).then((saved) => {
+  chrome.storage.local.get({ intervalSeconds: 120, startSeconds: 60, endMarginSeconds: 60, minimumSpacingSeconds: 120, cleanupStartSeconds: 0, cleanupEndMarginSeconds: 0 }).then((saved) => {
     if (touched) return;
-    for (const [id, name, minimum] of [["interval", "intervalSeconds", 1], ["start-margin", "startSeconds", 0], ["end-margin", "endMarginSeconds", 0], ["minimum-spacing", "minimumSpacingSeconds", 1]]) {
+    for (const [id, name, minimum] of [["interval", "intervalSeconds", 1], ["start-margin", "startSeconds", 0], ["end-margin", "endMarginSeconds", 0], ["minimum-spacing", "minimumSpacingSeconds", 1], ["cleanup-start-margin", "cleanupStartSeconds", 0], ["cleanup-end-margin", "cleanupEndMarginSeconds", 0]]) {
       if (/^\d+$/.test(String(saved[name])) && Number.isSafeInteger(Number(saved[name])) && Number(saved[name]) >= minimum) $(id).value = saved[name];
     }
   }).catch(() => {});
-  for (const id of ["start-margin", "end-margin", "minimum-spacing"]) $(id).addEventListener("input", () => { touched = true; invalidate(); });
+  for (const id of ["start-margin", "end-margin", "cleanup-start-margin", "cleanup-end-margin", "minimum-spacing"]) $(id).addEventListener("input", () => { touched = true; invalidate(); });
   function selectTab(next, focus = false) {
     if (controller || next === activeTab) return;
     activeTab = next;
@@ -255,13 +257,13 @@
       $("duration").textContent = P.formatTime(current.duration);
       $("data-summary").textContent = `${current.rows.length} điểm hiện có${cleaning ? ` · ${current.rows.filter((row) => row.kind === "manual" && row.warning).length} điểm thủ công có cảnh báo · ${current.rows.filter((row) => row.pending).length} điểm đang xem xét` : ""}.`;
       if (!preview) {
-        status(cleaning ? "Đã đọc lại dữ liệu. Chọn khoảng cách tối thiểu rồi bấm Xem trước dọn." : "Đã đọc độ dài video. Chọn khoảng cách rồi bấm Xem trước.");
+        status(cleaning ? "Đã đọc lại dữ liệu. Chọn đoạn đầu/cuối và khoảng cách tối thiểu rồi bấm Xem trước dọn." : "Đã đọc độ dài video. Chọn khoảng cách rồi bấm Xem trước.");
         return;
       }
       if (cleaning) {
-        cleanupPlan = globalThis.MidrollCleanup.makePlan(current, $("minimum-spacing").value);
-        chrome.storage.local.set({ minimumSpacingSeconds: cleanupPlan.spacing }).catch(() => {});
-        $("summary").textContent = `Sẽ xóa ${cleanupPlan.removals.length}/${cleanupPlan.total} điểm · Giữ ${cleanupPlan.retained} điểm\nGiữ ${cleanupPlan.automatic} điểm tự động · ${cleanupPlan.unknown} điểm chưa rõ loại\nSẽ xóa ${cleanupPlan.reviewRemovals} điểm thủ công Đang xem xét\nKhoảng cách tối thiểu: ${cleanupPlan.spacing} giây (điểm tự động được giữ dù gần nhau).`;
+        cleanupPlan = globalThis.MidrollCleanup.makePlan(current, $("minimum-spacing").value, { startSeconds: $("cleanup-start-margin").value, endMarginSeconds: $("cleanup-end-margin").value });
+        chrome.storage.local.set({ minimumSpacingSeconds: cleanupPlan.spacing, cleanupStartSeconds: cleanupPlan.start, cleanupEndMarginSeconds: cleanupPlan.endMargin }).catch(() => {});
+        $("summary").textContent = `Sẽ xóa ${cleanupPlan.removals.length}/${cleanupPlan.total} điểm · Giữ ${cleanupPlan.retained} điểm\nGiữ ${cleanupPlan.automatic} điểm tự động · ${cleanupPlan.unknown} điểm chưa rõ loại\nĐoạn đầu: ${cleanupPlan.start} giây · Đoạn cuối: ${cleanupPlan.endMargin} giây\nSẽ xóa ${cleanupPlan.marginRemovals} điểm theo đoạn đầu/cuối\nSẽ xóa ${cleanupPlan.reviewRemovals} điểm thủ công Đang xem xét\nKhoảng cách tối thiểu: ${cleanupPlan.spacing} giây (điểm tự động được giữ dù gần nhau).`;
         $("times").dataset.mode = "cleanup";
         $("times").setAttribute("aria-label", "Các điểm sẽ xóa và lý do");
         $("times").replaceChildren(...cleanupPlan.removals.map((target) => {
@@ -375,7 +377,7 @@
     let studio;
     try { studio = globalThis.MidrollStudio.diagnostics(); } catch { studio = { available: false }; }
     const interval = $("interval").value.trim();
-    const report = { version: "0.1.14", message: lastError, intervalSeconds: /^\d+$/.test(interval) ? interval : null, studio };
+    const report = { version: "0.1.15", message: lastError, intervalSeconds: /^\d+$/.test(interval) ? interval : null, studio };
     $("copy-error").disabled = true;
     const copied = await globalThis.MidrollErrorCopy.copy(JSON.stringify(report, null, 2), $("error-details"), () => current === statusRevision);
     if (current !== statusRevision) return;

@@ -1,3 +1,21 @@
+# Kiểm chứng bản 0.1.15 — 10/10/2026
+
+Thêm đoạn đầu/cuối trong tab Dọn điểm; chỉ chọn điểm thủ công ngoài khoảng được phép. Hai ô riêng với tab Chèn điểm, mặc định 0, lưu sau xem trước. Mốc đúng ranh giới được giữ nếu không vướng quy tắc khác. Mọi điểm tự động và chưa rõ loại luôn được bảo vệ, kể cả ở hai đầu video hoặc trùng thời gian với mục tiêu thủ công.
+
+- 92 kiểm thử logic đạt; thêm 6 kiểm thử gồm ranh giới/0/giá trị sai, phần nhỏ giây, bảo vệ automatic/unknown, hai đường chạy xóa và 300 bộ dữ liệu ngẫu nhiên đối chiếu cách tính độc lập.
+- 38 tình huống cleanup/margin browser đạt; 3 tình huống mới kiểm tra xóa đúng qua rerender với điểm tự động/chưa rõ trùng mốc, đầu vào sai/preview cũ, cài đặt riêng và lưu cài đặt. Hai ô bị khóa khi chạy; không tự lưu, không chỉnh mốc và cài đặt tự động vẫn bật.
+- 5 popup browser đạt.
+- 3 Chrome thu nhỏ đạt: chèn, hủy, dọn cảnh báo/Đang xem xét/đoạn đầu-cuối. Dọn xóa đúng 10 điểm thủ công và giữ các điểm tự động/chưa rõ ở hai đầu video. Dùng CDP thật/profile tạm với cầu Chrome API và Studio mô phỏng. Lượt chạy trong sandbox không giữ được trạng thái minimized; chạy ngoài sandbox đạt cả 3 tình huống.
+- Đã xem ảnh cleanup-margins-v0.1.15.png: preview xóa đúng 3/9 điểm thủ công và giữ 2 điểm tự động, 1 điểm chưa rõ nguồn. Các ảnh fixture cùng tên cập nhật theo bản mới.
+- Kiểm tra cú pháp JS/CJS và Git diff whitespace đạt. Phiên bản manifest/package/popup/panel/diagnostics là 0.1.15; quyền không đổi.
+- ZIP 17 tệp, 44.334 byte; CRC và từng byte khớp mã nguồn. SHA-256: `8349398ddab5ed01179c8178b9f7350c1bd8d91e6b714627f875c890ee338fc1`.
+
+Giữ ranh giới nguyên mà không đoán FPS: mốc đầu có bộ đếm >0 vẫn nằm trong vùng được phép; mốc cuối với bộ đếm >0 nằm sau ranh giới và được chọn xóa. Khi cutoff cuối có phần lẻ giây và một mốc thủ công cùng giây dùng bộ đếm không rõ đơn vị, dừng trước khi xóa nếu mốc đó chưa có lý do xóa độc lập. Không dùng điểm thủ công đã loại theo đoạn đầu/cuối làm neo lọc khoảng cách; điểm tự động vẫn làm neo.
+
+Chưa kiểm chứng trực tiếp DOM, lưu hoặc phân phát quảng cáo trên YouTube Studio thật. Các báo cáo bên dưới là lịch sử.
+
+---
+
 # Kiểm chứng bản 0.1.14
 
 Rà soát đầy đủ ở AUDIT-0.1.14.md. Bản cuối giữ chính sách của người dùng: bảo vệ điểm cũ khi chèn; dọn mọi manual warning/Đang xem xét và lọc khoảng cách, giữ auto/unknown; không tự Lưu.

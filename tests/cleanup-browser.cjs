@@ -76,6 +76,51 @@ const { chromium } = require('playwright');
   async function run() { await ui('cleanup-start').click(); await done(); }
   const m = (raw, warning = false) => ({ raw, kind: 'manual', warning });
   try {
+    await scenario('cleanup margins remove manual endpoints and preserve automatic and unknown duplicate slots across rerenders', async () => {
+      await install([m('0:10:00'), { raw: '0:10:00', kind: 'automatic', warning: true, pending: true }, { raw: '0:10:00', warning: true },
+        m('1:00:00'), m('5:00:00'), m('9:00:00'), m('9:00:17'), m('9:50:00'), { raw: '9:50:00', kind: 'automatic', warning: true, pending: true }]);
+      await page.evaluate(() => { fixture.cleanupRerender = true; });
+      await preview(1);
+      await ui('cleanup-start-margin').fill('60'); await ui('cleanup-end-margin').fill('60');
+      await ui('cleanup-read').click(); await ready();
+      assert.equal(await ui('times').locator('li').count(), 3);
+      assert.match(await ui('times').innerText(), /Trong đoạn đầu không chèn/);
+      assert.match(await ui('times').innerText(), /Trong đoạn cuối không chèn/);
+      assert.deepEqual(await page.evaluate(() => [fixture.savedSettings.cleanupStartSeconds, fixture.savedSettings.cleanupEndMarginSeconds]), [60, 60]);
+      await fs.mkdir(path.resolve(__dirname, '../artifacts'), { recursive: true });
+      await page.screenshot({ path: path.resolve(__dirname, '../artifacts/cleanup-margins-v0.1.15.png') });
+      await ui('cleanup-start').click();
+      assert.equal(await ui('cleanup-start-margin').isDisabled(), true); assert.equal(await ui('cleanup-end-margin').isDisabled(), true);
+      await done();
+      assert.equal(await ui('status').getAttribute('data-tone'), 'success', await ui('status').innerText());
+      assert.deepEqual(await values(), ['0:10:00', '0:10:00', '1:00:00', '5:00:00', '9:00:00', '9:50:00']);
+      assert.deepEqual(await page.evaluate(() => [fixture.deletedTimes, fixture.saves, fixture.oldEdits || 0]), [['0:10:00', '9:00:17', '9:50:00'], 0, 0]);
+      assert.equal(await page.locator('#automatic').isChecked(), true);
+    });
+    await scenario('invalid cleanup margins block every click and edits invalidate preview', async () => {
+      await install([m('0:30:00'), m('9:30:00')]); await preview(1);
+      for (const [start, end] of [['', '0'], ['-1', '0'], ['0', '1.5'], ['300', '300']]) {
+        await ui('cleanup-start-margin').fill(start); await ui('cleanup-end-margin').fill(end);
+        await ui('cleanup-read').click(); await ready();
+        assert.equal(await ui('cleanup-start').isDisabled(), true); assert.equal(await ui('status').getAttribute('data-tone'), 'error');
+      }
+      assert.equal(await page.evaluate(() => fixture.deletes + fixture.saves), 0);
+      await ui('cleanup-start-margin').fill('60'); await ui('cleanup-end-margin').fill('60');
+      await ui('cleanup-read').click(); await ready(); assert.equal(await ui('cleanup-start').isDisabled(), false);
+      await ui('cleanup-end-margin').fill('0'); assert.equal(await ui('cleanup-start').isDisabled(), true); assert.equal(await ui('preview').isVisible(), false);
+    });
+    await scenario('cleanup margins are independent and survive switching tabs and reloading duration', async () => {
+      await ui('start-margin').fill('90'); await ui('end-margin').fill('150'); await preview(1);
+      assert.equal(await ui('cleanup-start-margin').inputValue(), '0'); assert.equal(await ui('cleanup-end-margin').inputValue(), '0');
+      await ui('cleanup-start-margin').fill('30'); await ui('cleanup-end-margin').fill('45');
+      await ui('cleanup-read').click(); await ready();
+      await ui('tab-insert').click(); await ready();
+      assert.equal(await ui('start-margin').inputValue(), '90'); assert.equal(await ui('end-margin').inputValue(), '150');
+      await ui('tab-cleanup').click(); await ready(); await ui('load').click(); await ready();
+      assert.equal(await ui('cleanup-start-margin').inputValue(), '30'); assert.equal(await ui('cleanup-end-margin').inputValue(), '45');
+      assert.deepEqual(await page.evaluate(() => [fixture.savedSettings.cleanupStartSeconds, fixture.savedSettings.cleanupEndMarginSeconds]), [30, 45]);
+      assert.equal(await page.evaluate(() => fixture.deletes + fixture.saves), 0);
+    });
     await scenario('custom margins drive insertion preview and do not change existing points', async () => {
       await ui('start-margin').fill('90'); await ui('end-margin').fill('150'); await ui('read').click(); await ready();
       assert.deepEqual(await ui('times').locator('li').allTextContents(), ['00:01:30', '00:03:30', '00:05:30', '00:07:30']);

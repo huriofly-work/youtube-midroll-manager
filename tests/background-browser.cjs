@@ -93,20 +93,33 @@ const { createBackgroundSessions } = require('../extension/background-session.js
         const old = row.querySelector('button'), button = old.cloneNode(true); old.replaceWith(button);
         button.addEventListener('click', () => { if (!document.hasFocus()) return; fixture.deletes++; row.remove(); });
       }
+      for (const seconds of [30, 590]) {
+        const row = addRow(MidrollPlanner.formatStudioTime(seconds, '0:00:00'), true);
+        row.setAttribute('data-ad-type', 'manual');
+        const old = row.querySelector('button'), button = old.cloneNode(true); old.replaceWith(button);
+        button.addEventListener('click', () => { if (!document.hasFocus()) return; fixture.deletes++; row.remove(); });
+      }
+      addRow('9:50:00', true).setAttribute('data-ad-type', 'automatic');
+      addRow('9:55:00', true).setAttribute('data-ad-type', 'unknown');
       MidrollPanelHost.shadowRoot.getElementById('tab-cleanup').click();
     });
     await page.waitForFunction(() => !MidrollPanelHost.shadowRoot.getElementById('cleanup-read').disabled, null, { polling: 100 });
-    await page.evaluate(() => { MidrollPanelHost.shadowRoot.getElementById('minimum-spacing').value = '1'; MidrollPanelHost.shadowRoot.getElementById('cleanup-read').click(); });
+    await page.evaluate(() => {
+      const ui = MidrollPanelHost.shadowRoot;
+      ui.getElementById('minimum-spacing').value = '1';
+      ui.getElementById('cleanup-start-margin').value = '60'; ui.getElementById('cleanup-end-margin').value = '60';
+      ui.getElementById('cleanup-read').click();
+    });
     await page.waitForFunction(() => !MidrollPanelHost.shadowRoot.getElementById('cleanup-read').disabled, null, { polling: 100 });
     await page.evaluate(() => MidrollPanelHost.shadowRoot.getElementById('cleanup-start').click());
     await page.waitForFunction(() => MidrollPanelHost.shadowRoot.getElementById('status').dataset.tone === 'success', null, { polling: 100 });
-    assert.deepEqual(await page.locator('.ad-row input').evaluateAll((nodes) => nodes.map((n) => n.value)), original);
-    assert.deepEqual(await page.evaluate(() => [fixture.deletes, fixture.saves, document.getElementById('automatic').checked]), [7, 0, true]);
+    assert.deepEqual(await page.locator('.ad-row input').evaluateAll((nodes) => nodes.map((n) => n.value)), [...original.slice(0, 2), '9:50:00', '9:55:00']);
+    assert.deepEqual(await page.evaluate(() => [fixture.deletes, fixture.saves, document.getElementById('automatic').checked]), [10, 0, true]);
     assert.equal((await cdp.send('Browser.getWindowBounds', { windowId })).bounds.windowState, 'minimized');
     assert.equal(await page.evaluate(() => document.hasFocus()), false);
     assert.equal(calls.filter((c) => c === 'detach').length, 1);
     assert.deepEqual(errors, []);
-    console.log('PASS warning and pending manual cleanup in minimized Chrome preserves existing/automatic slots and restores focus emulation');
+    console.log('PASS warning, pending and margin cleanup in minimized Chrome preserves automatic and unknown endpoint slots and restores focus emulation');
     await cdp.detach();
   } finally {
     await browser.close();

@@ -615,7 +615,7 @@
   function diagnostics() {
     const { scope } = editorScope();
     return {
-      version: "0.1.14",
+      version: "0.1.15",
       lastInsertion,
       editor: scope.localName,
       controls: query(scope, BUTTONS).filter(visible).map((node) => ({ tag: node.localName, label: node.getAttribute("aria-label") || node.getAttribute("title") || node.textContent.trim().slice(0, 100) })),
