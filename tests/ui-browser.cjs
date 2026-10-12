@@ -6,6 +6,7 @@ const http = require('node:http');
 const { chromium } = require('playwright');
 (async () => {
   const root = path.resolve(__dirname, '..');
+  const version = JSON.parse(await fs.readFile(path.join(root, 'extension/manifest.json'), 'utf8')).version;
   const server = http.createServer(async (req, res) => {
     const route = new URL(req.url, 'http://localhost').pathname;
     const file = route.startsWith('/video/') ? path.join(__dirname, 'studio-fixture.html')
@@ -64,7 +65,7 @@ const { chromium } = require('playwright');
           // Restore the initial configuration view for the screenshot.
           await ui('load').click(); await ready();
           await host.locator('main').evaluate((main) => { main.scrollTop = 0; });
-          await host.screenshot({ path: path.join(root, `artifacts/ui-${mode}-${viewport.width}x${viewport.height}-v0.1.16.png`) });
+          await host.screenshot({ path: path.join(root, `artifacts/ui-${mode}-${viewport.width}x${viewport.height}-v${version}.png`) });
         }
         assert.equal(await page.evaluate(() => fixture.clicks + fixture.deletes + fixture.saves), 0);
       });
@@ -103,7 +104,7 @@ const { chromium } = require('playwright');
       const listBox = await ui('times').boundingBox(), mainBox = await host.locator('main').boundingBox();
       assert.ok(listBox.y >= mainBox.y && listBox.y + listBox.height <= mainBox.y + mainBox.height, 'preview list must be in view after reading');
       await ui('preview-title').scrollIntoViewIfNeeded();
-      await host.screenshot({ path: path.join(root, 'artifacts/ui-cleanup-plan-v0.1.16.png') });
+      await host.screenshot({ path: path.join(root, `artifacts/ui-cleanup-plan-v${version}.png`) });
       await ui('cleanup-start').click(); await done();
       assert.equal(await ui('status').getAttribute('data-tone'), 'success');
       assert.equal(await ui('preview').isVisible(), true);
@@ -124,7 +125,7 @@ const { chromium } = require('playwright');
       await layout();
       await page.waitForFunction(() => MidrollPanelHost.shadowRoot.getElementById('progress').value >= 1);
       assert.match(await ui('progress-text').innerText(), /Đã xác nhận: [1-9]/);
-      await host.screenshot({ path: path.join(root, 'artifacts/ui-running-v0.1.16.png') });
+      await host.screenshot({ path: path.join(root, `artifacts/ui-running-v${version}.png`) });
       await ui('stop').click(); await done();
       assert.equal(await ui('run-progress').isVisible(), false);
       assert.equal(await ui('insert-actions').isVisible(), true);

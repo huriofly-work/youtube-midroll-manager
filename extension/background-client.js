@@ -3,14 +3,13 @@
   const request = (message, timeout = 10000, signal) => root.MidrollWait.request(() => chrome.runtime.sendMessage(message), {
     signal, timeout, timeoutMessage: "Không nhận được phản hồi chế độ chạy nền."
   });
-  async function run(task, { signal } = {}) {
-    const runId = crypto.randomUUID();
+  async function run(task, { signal, runId = crypto.randomUUID() } = {}) {
     const controller = new AbortController();
     const videoId = location.pathname.match(/^\/video\/([A-Za-z0-9_-]+)\//)?.[1];
     let heartbeat, failure;
     const abort = () => controller.abort(signal.reason);
     const lost = (message) => {
-      if (message?.type === "MIDROLL_BACKGROUND_LOST" && message.runId === runId) controller.abort(new Error(message.message));
+      if (message?.type === "MIDROLL_BACKGROUND_LOST" && message.runId === runId) controller.abort(Object.assign(new Error(message.message), { code: "background-lost" }));
       return false;
     };
     const leave = () => controller.abort(new Error("Tab Studio đã đóng hoặc chuyển trang. Đã dừng chèn."));
@@ -42,7 +41,7 @@
         const result = await request({ type: "MIDROLL_BACKGROUND_STOP", runId }, 5000);
         if (!result?.ok) throw new Error(result?.error || "Không ngắt được phiên chạy nền.");
       } catch (error) {
-        if (!failure) throw new Error(`Các mốc đã xử lý nhưng chưa kết thúc được phiên chạy nền: ${error.message}. Bấm Hủy trên thanh thông báo Chrome; chưa lưu thay đổi.`);
+        if (!failure) throw Object.assign(new Error(`Các mốc đã xử lý nhưng chưa kết thúc được phiên chạy nền: ${error.message}. Bấm Hủy trên thanh thông báo Chrome; chưa lưu thay đổi.`), { code: "background-stop-failed" });
       }
     }
   }

@@ -1,9 +1,15 @@
 importScripts("duration-reader.js");
 importScripts("playhead-controller.js");
 importScripts("background-session.js");
-const backgroundSessions = globalThis.MidrollCreateBackgroundSessions(chrome);
+importScripts("run-alerts.js");
+const runAlerts = globalThis.MidrollRunAlerts.createRunAlerts(chrome);
+const backgroundSessions = globalThis.MidrollCreateBackgroundSessions(chrome, { onLost: runAlerts.lost });
 
 chrome.runtime.onMessage.addListener((message, sender, reply) => {
+  if (["MIDROLL_RUN_BEGIN", "MIDROLL_RUN_PROGRESS", "MIDROLL_RUN_ERROR", "MIDROLL_RUN_ACK", "MIDROLL_RUN_END"].includes(message?.type)) {
+    void runAlerts.handle(message, sender).then(reply, () => reply({ ok: false }));
+    return true;
+  }
   if (message?.type === "MIDROLL_OPEN_PANEL") {
     if (sender.id !== chrome.runtime.id || sender.url !== chrome.runtime.getURL("popup.html") || (sender.frameId !== undefined && sender.frameId !== 0)) {
       reply({ ok: false, kind: "error", message: "Không mở được bảng từ ngữ cảnh này." });
@@ -43,8 +49,6 @@ async function openPanel() {
   try {
     [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!Number.isInteger(tab?.id)) throw new Error("no-tab");
-    await chrome.action.setBadgeText({ tabId: tab.id, text: "" });
-    await chrome.action.setTitle({ tabId: tab.id, title: "Chèn điểm quảng cáo YouTube" });
     const url = new URL(tab.url || "");
     if (url.origin !== "https://studio.youtube.com") {
       return { ok: false, kind: "instruction", message: "Extension chèn điểm trên YouTube Studio. Hãy mở một video rồi vào Quản lý vị trí quảng cáo." };
@@ -59,7 +63,7 @@ async function openPanel() {
     if (opened[0]?.result === true) return { ok: true };
     await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      files: ["planner.js", "cleanup.js", "wait.js", "studio.js", "runner.js", "background-client.js", "error-copy.js", "content.js"]
+      files: ["planner.js", "cleanup.js", "wait.js", "studio.js", "runner.js", "background-client.js", "error-copy.js", "run-alerts.js", "content.js"]
     });
     return { ok: true };
   } catch (error) {

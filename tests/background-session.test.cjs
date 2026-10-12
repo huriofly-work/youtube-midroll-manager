@@ -15,10 +15,10 @@ function fixture(options = {}) {
     },
     tabs: {
       onUpdated: { addListener(fn) { updater = fn; } }, onRemoved: { addListener(fn) { remover = fn; } },
-      async sendMessage(tabId, message) { calls.push(['message', tabId, message]); }
+      async sendMessage(tabId, message) { calls.push(['message', tabId, message]); if (options.disconnected) throw Error('renderer unavailable'); }
     }
   };
-  const manager = createBackgroundSessions(chrome, { now: () => now, setInterval(fn) { watchdog = fn; return 1; }, clearInterval() { watchdog = null; } });
+  const manager = createBackgroundSessions(chrome, { now: () => now, setInterval(fn) { watchdog = fn; return 1; }, clearInterval() { watchdog = null; }, onLost: options.onLost });
   return { calls, manager, send(type, extra = {}, sender = SENDER) { return manager.handle({ type: `MIDROLL_BACKGROUND_${type}`, runId: RUN, videoId: 'test123', ...extra }, sender); },
     detach() { detacher({ tabId: 7 }); }, navigate() { updater(7, { status: 'loading' }); }, close() { remover(7); },
     tick(ms) { now += ms; watchdog?.(); }, async flush() { for (let i = 0; i < 10; i++) await Promise.resolve(); }
@@ -34,6 +34,15 @@ test('background session emulates only the sender video tab and cleans up after 
   ]);
   assert.equal((await f.send('STOP')).ok, true);
   assert.deepEqual(f.calls.slice(-2), [['command', { tabId: 7 }, 'Emulation.setFocusEmulationEnabled', { enabled: false }], ['detach', { tabId: 7 }]]);
+});
+test('background loss reports independently of an unavailable renderer, without alarming on normal stop', async () => {
+  const losses = []; const f = fixture({ disconnected: true, onLost: (record, message) => losses.push({ tabId: record.tabId, runId: record.runId, message }) });
+  await f.send('START'); f.tick(46000); await f.flush();
+  assert.equal(losses.length, 1); assert.equal(losses[0].tabId, 7); assert.equal(losses[0].runId, RUN);
+  assert.match(losses[0].message, /Mất kết nối/); assert.ok(f.calls.some(([name]) => name === 'detach'));
+  const normal = fixture({ onLost: () => losses.push('unexpected') }); await normal.send('START'); await normal.send('STOP'); assert.equal(losses.length, 1);
+  const brokenReporter = fixture({ onLost: () => { throw Error('notification unavailable'); } }); await brokenReporter.send('START'); brokenReporter.tick(46000); await brokenReporter.flush();
+  assert.ok(brokenReporter.calls.some(([name]) => name === 'detach'));
 });
 test('wrong sender, frame, host, video ID or malformed token cannot attach', async () => {
   for (const [sender, extra] of [

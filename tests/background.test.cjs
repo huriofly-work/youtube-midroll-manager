@@ -31,7 +31,7 @@ test('popup opens bundled panel scripts in dependency order only on the active S
   const f = background();
   await f.click({ id: 7, url: 'https://studio.youtube.com/video/test123/monetization' });
   const injection = f.calls.find(([name, details]) => name === 'inject' && details.files)[1];
-  assert.deepEqual(Array.from(injection.files), ['planner.js', 'cleanup.js', 'wait.js', 'studio.js', 'runner.js', 'background-client.js', 'error-copy.js', 'content.js']);
+  assert.deepEqual(Array.from(injection.files), ['planner.js', 'cleanup.js', 'wait.js', 'studio.js', 'runner.js', 'background-client.js', 'error-copy.js', 'run-alerts.js', 'content.js']);
   assert.equal(injection.target.tabId, 7);
   assert.deepEqual(JSON.parse(JSON.stringify(f.calls.find(([name]) => name === 'query')[1])), { active: true, currentWindow: true });
   assert.equal(f.calls.filter(([name]) => name === 'inject').length, 2);
@@ -41,7 +41,7 @@ test('other sites, Studio lists and restricted Chrome pages return visible instr
     const f = background();
     const result = await f.click({ id: 7, url });
     assert.equal(f.calls.filter(([name]) => name === 'inject').length, 0);
-    assert.equal(f.calls.find(([name]) => name === 'badge')[1].text, '');
+    assert.equal(f.calls.some(([name]) => name === 'badge'), false);
     assert.equal(result.kind, 'instruction'); assert.ok(result.message);
   }
 });
@@ -49,7 +49,7 @@ test('injection failure returns an error for the popup and keeps the badge clear
   const f = background(true);
   const result = await f.click({ id: 7, url: 'https://studio.youtube.com/video/test123/monetization' });
   assert.equal(result.kind, 'error'); assert.match(result.message, /Không mở được bảng/);
-  assert.equal(f.calls.find(([name]) => name === 'badge')[1].text, '');
+  assert.equal(f.calls.some(([name]) => name === 'badge'), false);
 });
 test('web content, other extension senders and subframes cannot use the popup opening endpoint', async () => {
   for (const sender of [
@@ -65,12 +65,12 @@ test('web content, other extension senders and subframes cannot use the popup op
 test('manifest declares the required background debugger transport and no broad host access', () => {
   const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, '../extension/manifest.json'), 'utf8'));
   assert.equal(manifest.manifest_version, 3);
-  assert.deepEqual(manifest.permissions, ['activeTab', 'scripting', 'storage', 'debugger']);
+  assert.deepEqual(manifest.permissions, ['activeTab', 'scripting', 'storage', 'debugger', 'notifications']);
   assert.equal(manifest.minimum_chrome_version, '118');
   assert.equal(manifest.optional_permissions, undefined);
   assert.equal(manifest.host_permissions, undefined);
   assert.equal(manifest.action.default_popup, 'popup.html');
-  const assets = [manifest.background.service_worker, 'background-session.js', 'background-client.js', 'duration-reader.js', 'playhead-controller.js', 'planner.js', 'wait.js', 'studio.js', 'runner.js', 'content.js', 'error-copy.js', 'popup.html', 'popup.js', 'popup.css'];
+  const assets = [manifest.background.service_worker, 'background-session.js', 'background-client.js', 'duration-reader.js', 'playhead-controller.js', 'planner.js', 'wait.js', 'studio.js', 'runner.js', 'content.js', 'error-copy.js', 'run-alerts.js', 'alert-icon.png', 'popup.html', 'popup.js', 'popup.css'];
   for (const asset of assets) assert.ok(fs.existsSync(path.join(__dirname, '../extension', asset)));
 });
 test('duration request reads MAIN in the sender tab and returns a minimal result', async () => {

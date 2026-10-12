@@ -1,4 +1,4 @@
-# Chèn và dọn điểm quảng cáo YouTube — 0.1.17
+# Chèn và dọn điểm quảng cáo YouTube — 0.1.18
 
 Dành cho Chrome từ 118, YouTube Studio tiếng Việt, một video đang mở. Bạn xem lại và tự bấm Tiếp tục/Lưu. Không cần API key, OAuth hoặc cài Node.js.
 
@@ -7,9 +7,11 @@ Dành cho Chrome từ 118, YouTube Studio tiếng Việt, một video đang mở
 1. Giải nén ZIP vào một thư mục cố định, có `manifest.json` ngay bên trong.
 2. Mở `chrome://extensions`, bật **Chế độ dành cho nhà phát triển**, chọn **Tải tiện ích đã giải nén**, rồi chọn thư mục đó.
 3. Khi cập nhật, thay tệp trong đúng thư mục đã cài và bấm **Tải lại** extension. Nếu cài từ thư mục mã nguồn `extension`, chỉ cần Tải lại.
-4. Lưu các chỉnh sửa Studio muốn giữ trước khi F5 trang. Mở lại trình quảng cáo và kiểm tra bảng có **v0.1.17**.
+4. Lưu các chỉnh sửa Studio muốn giữ trước khi F5 trang. Mở lại trình quảng cáo và kiểm tra bảng có **v0.1.18**.
 
 Extension cần quyền debugger để giữ riêng tab Studio hoạt động khi bạn dùng ứng dụng khác. Chrome hiện thanh thông báo trong lúc chạy; phiên kết thúc khi xong, dừng hoặc gặp lỗi. Chấp nhận quyền/bật lại extension nếu Chrome yêu cầu.
+
+Bản 0.1.18 thêm quyền **notifications** để báo lỗi khi bạn đang làm việc khác. Chấp nhận quyền/bật lại nếu Chrome yêu cầu. Nếu thông báo bị Chrome hoặc Windows chặn, lỗi vẫn hiện trong bảng và dấu **!** trên biểu tượng.
 
 ## Chèn điểm
 
@@ -53,9 +55,20 @@ Tool vẫn bấm xóa riêng từng điểm. Khi Studio cập nhật ngay, nhi�
 
 **Xem trước** ở cả hai tab đều tự đọc lại dữ liệu, nên thường không cần bấm Tải lại trước đó. Dùng **Tải lại dữ liệu** khi bạn chỉ muốn kiểm tra thời lượng và trạng thái mới; nút này không tải lại trang, không yêu cầu YouTube đánh giá lại và không thay đổi điểm nào. Chuyển tab giữ cài đặt, bỏ kế hoạch cũ và đọc dữ liệu cho chức năng mới.
 
-Sau khi bắt đầu, có thể dùng ứng dụng khác hoặc thu nhỏ Chrome. Máy phải còn thức, Chrome phải chạy, video và trình quảng cáo phải giữ nguyên. Extension không đưa Chrome lên trước hoặc chiếm chuột/bàn phím. Không đóng/chuyển video, mở DevTools của tab đó hoặc bấm Hủy trên thanh điều khiển Chrome trong lúc chạy. Dùng nút **Dừng** để dừng bình thường.
+Sau khi bắt đầu, có thể dùng ứng dụng khác hoặc thu nhỏ Chrome. Máy phải còn thức, Chrome phải chạy, video và trình quảng cáo phải giữ nguyên. Khi chạy bình thường, extension không đưa Chrome lên trước hoặc chiếm chuột/bàn phím. Không đóng/chuyển video, mở DevTools của tab đó hoặc bấm Hủy trên thanh điều khiển Chrome trong lúc chạy. Dùng nút **Dừng** để dừng bình thường.
 
 ## Khi bị dừng hoặc gặp lỗi
+
+Lỗi khi đang chèn/dọn hiện hộp **Đã dừng — cần kiểm tra**, kèm thông báo hệ thống và dấu **!** trên biểu tượng extension. Hộp ghi nguyên nhân, số điểm **đã xác nhận** và điểm/nhóm cuối còn cần kiểm tra; điểm đã bấm xóa nhưng chưa xác nhận được ghi riêng.
+
+- **Kiểm tra trong Studio**: đóng hộp để bạn đối chiếu danh sách; xác nhận đã xem thông báo, không tiếp tục chạy.
+- **Đọc lại và xem trước**: đọc dữ liệu hiện tại, chọn đúng tab của lượt bị lỗi và lập kế hoạch mới. Bạn vẫn phải tự bấm Chèn/Dọn sau khi xem lại.
+- **Để sau** hoặc Escape: đóng hộp, giữ lỗi để mở lại bằng **Xem lỗi và cách xử lý** hoặc biểu tượng extension. Thông báo hệ thống có thể bị Windows đóng theo cài đặt; dấu ! còn đến khi bạn xác nhận đã xem hoặc bắt đầu lượt mới.
+- **Sao chép thông tin lỗi**: sao chép theo yêu cầu, không tự gửi đi.
+
+Mục **Thông báo khi gặp lỗi** dùng chung cho hai tab. Mặc định bật **Đưa Chrome lên trước khi cần kiểm tra**: chỉ khi lượt chạy gặp lỗi, chọn đúng tab Studio và khôi phục cửa sổ nếu đang thu nhỏ. Tắt tùy chọn nếu muốn ít gián đoạn; bấm thông báo hoặc **Mở Studio để kiểm tra** sẽ đưa cửa sổ lên trước. Hệ điều hành có thể hạn chế focus/thông báo; khi đó kiểm tra dấu ! trên biểu tượng. Một lỗi không liên tục phát lại thông báo hoặc đưa cửa sổ lên trước. Dừng theo yêu cầu, hoàn tất và lỗi nhập liệu/xem trước không phát cảnh báo hệ thống.
+
+Không có nút bỏ qua kiểm tra hoặc tự tiếp tục từ thao tác chưa rõ kết quả. Sau lỗi phải đọc dữ liệu và xem trước mới trước khi chạy. Trạng thái thông báo được giữ trong phiên Chrome qua lần service worker khởi động lại; đóng tab hoặc chuyển video sẽ xóa thông báo của video cũ.
 
 Các thay đổi đã thực hiện vẫn nằm trong bản chỉnh sửa Studio; không tự lưu hoặc hoàn tác. Kiểm tra cả điểm cuối/nhóm đang xử lý. Khi chưa rõ kết quả một thao tác, tool không bấm thêm/xóa lại để tránh sửa nhầm. Nếu cài đặt quảng cáo tự động bị Studio thay đổi, kiểm tra và đặt lại theo ý bạn trước khi lưu hoặc xem trước lại.
 

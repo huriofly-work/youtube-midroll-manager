@@ -1,5 +1,9 @@
 # Lịch sử thay đổi
 
+0.1.18 thêm cơ chế xử lý lỗi trong lượt chèn/dọn: hộp modal nổi bật, thông báo hệ thống có nút Mở Studio/Để sau và dấu ! để mở lại sự cố. Hiển thị số điểm đã xác nhận, mốc đang xử lý và nhóm xóa chưa xác nhận. Mặc định khôi phục/chọn đúng cửa sổ và tab Chrome khi gặp lỗi; tùy chọn dùng chung cho hai chức năng để tắt tự focus. Không gây chú ý hệ thống khi thành công, người dùng dừng hoặc chỉ sai đầu vào. Một sự cố dùng một thông báo, không tự thử lại thao tác, luôn cần đọc lại/xem trước mới. Bảo vệ điểm tự động và việc tự Lưu giữ nguyên.
+
+Thêm quyền notifications, icon PNG (đã kiểm tra Chrome thật; SVG bị API từ chối), lưu trạng thái tối thiểu trong storage.session để qua lần worker khởi động lại. Phần chạy nền vẫn báo mất kết nối khi renderer không phản hồi; kiểm tra đúng video/run ID trước khi mở lỗi, không mở lại tab đã đóng hoặc điều hướng sang video cũ. Bàn phím và cửa sổ nhỏ được kiểm tra, gồm hộp lỗi nằm trong dialog Studio. Chi tiết kiểm chứng ở artifacts/VERIFICATION.md.
+
 0.1.17: mở rộng bảng hướng dẫn popup lên 460 px, tăng cỡ chữ và khoảng cách. Đặt chiều rộng cố định trên phần tử gốc, bỏ giới hạn theo viewport để tránh co hẹp khi Chrome đo kích thước popup ban đầu. Kiểm tra thông báo dài, hướng dẫn và viewport khởi tạo 25 px; giữ nguyên bảng chèn/dọn trong Studio.
 
 0.1.16: thiết kế lại popup và bảng Studio, cố định header/tab/thanh thao tác, gom thiết lập, bỏ nút cộng/trừ để đồng nhất ô nhập và quy đổi giây, báo lỗi ngay tại ô nhập, phân biệt nút chèn/dọn và hiển thị số điểm. Thêm tiến độ đã xác nhận, giữ kế hoạch sau chạy để đối chiếu và yêu cầu xem trước lại. Làm rõ neo tự động ở trước/sau và lý do xóa từng mốc. Rút gọn hướng dẫn lặp; sửa phiên bản trong báo cáo lỗi popup. Thêm kiểm tra bố cục nhỏ, bàn phím, tiến độ/Dừng và preview. Giữ nguyên thuật toán, bảo vệ mọi điểm tự động/chưa rõ loại và việc người dùng tự Lưu.

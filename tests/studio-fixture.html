@@ -88,8 +88,14 @@
   // Background security and world selection are tested separately in Node.
   globalThis.chrome = {
     runtime: {
-      onMessage: { addListener(fn) { fixture.messageListener = fn; }, removeListener(fn) { if (fixture.messageListener === fn) fixture.messageListener = null; } },
+      id: 'local-test',
+      onMessage: { addListener(fn) { (fixture.messageListeners ||= new Set()).add(fn); fixture.messageListener = (message, sender = { id: 'local-test' }, reply = () => {}) => { for (const listener of fixture.messageListeners) listener(message, sender, reply); }; }, removeListener(fn) { fixture.messageListeners?.delete(fn); } },
       sendMessage: async (message) => {
+      if (message.type.startsWith('MIDROLL_RUN_')) {
+        fixture.alertRequests = [...(fixture.alertRequests || []), message];
+        if (globalThis.alertMessage) return await alertMessage(message);
+        return { ok: true, notified: !fixture.notificationDenied, focused: true };
+      }
       if (message.type.startsWith('MIDROLL_BACKGROUND_')) {
         fixture.backgroundRequests = [...(fixture.backgroundRequests || []), message.type];
         if (globalThis.backgroundMessage) return await backgroundMessage(message);
@@ -130,5 +136,6 @@
 <script src="/extension/runner.js"></script>
 <script src="/extension/background-client.js"></script>
 <script src="/extension/error-copy.js"></script>
+<script src="/extension/run-alerts.js"></script>
 <script src="/extension/content.js"></script>
 </html>

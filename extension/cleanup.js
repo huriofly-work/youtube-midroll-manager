@@ -70,7 +70,8 @@
     };
   }
 
-  async function runPlan(adapter, plan, { signal, onProgress = () => {}, onWaiting = () => {} } = {}) {
+  async function runPlan(adapter, plan, { signal, onProgress = () => {}, onWaiting = () => {}, onStage = () => {} } = {}) {
+    onStage({ phase: "checking", points: [] });
     let removed = 0;
     let expected = plan.fingerprint;
     if (adapter.removePoints) {
@@ -85,6 +86,7 @@
           if (index < 0) throw new Error("Không xác định chắc chắn toàn bộ điểm thủ công trong nhóm dọn. Chưa xóa nhóm này.");
           remaining.splice(index, 1);
         }
+        onStage({ phase: "processing", points: targets.map((t) => t.seconds) });
         const result = await adapter.removePoints(targets, {
           signal, expectedFingerprint: expected,
           onWaiting: (message) => onWaiting({ removed, total: plan.removals.length, message })
@@ -96,8 +98,10 @@
         expected = after.cleanupFingerprint;
         removed += targets.length;
         onProgress({ removed, total: plan.removals.length, seconds: targets.at(-1).seconds });
+        onStage({ phase: "checking", points: [] });
       }
       signal?.throwIfAborted();
+      onStage({ phase: "verifying", points: [] });
       if (adapter.verifyCleanup) await adapter.verifyCleanup(expected, { signal });
       if (adapter.cleanupSnapshot().cleanupFingerprint !== expected) throw new Error("Danh sách cuối đã thay đổi. Kiểm tra lại trước khi lưu.");
       return { removed };
@@ -111,6 +115,7 @@
       if (index < 0) throw new Error("Không xác định chắc chắn điểm thủ công cần xóa. Đã dừng.");
       const remaining = before.rows.filter((_, i) => i !== index);
       const expectedSignature = signature(remaining);
+      onStage({ phase: "processing", points: [target.seconds] });
       await adapter.removePoint(target.key, {
         signal, expectedFingerprint: expected,
         onWaiting: (message) => onWaiting({ removed, total: plan.removals.length, message })
@@ -122,8 +127,10 @@
       expected = after.cleanupFingerprint;
       removed++;
       onProgress({ removed, total: plan.removals.length, seconds: target.seconds });
+      onStage({ phase: "checking", points: [] });
     }
     signal?.throwIfAborted();
+    onStage({ phase: "verifying", points: [] });
     if (adapter.verifyCleanup) await adapter.verifyCleanup(expected, { signal });
     if (adapter.cleanupSnapshot().cleanupFingerprint !== expected) throw new Error("Danh sách cuối đã thay đổi. Kiểm tra lại trước khi lưu.");
     return { removed };

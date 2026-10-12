@@ -31,3 +31,5 @@ jobs:
         run: npm run test:popup
       - name: Check layout and UI interactions
         run: npm run test:ui
+      - name: Check error dialogs and recovery
+        run: npm run test:alerts

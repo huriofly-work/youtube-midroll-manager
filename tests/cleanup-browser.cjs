@@ -70,6 +70,7 @@ const { chromium } = require('playwright');
     }, entries);
   }
   async function preview(spacing = 60) {
+    if (await ui('run-alert').isVisible()) await ui('alert-inspect').click();
     await ui('tab-cleanup').click(); await ready();
     await ui('minimum-spacing').fill(String(spacing));
     await ui('cleanup-read').click(); await ready();

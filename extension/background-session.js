@@ -1,6 +1,6 @@
 (function (root) {
   "use strict";
-  function createBackgroundSessions(chrome, { now = () => Date.now(), setInterval: every = setInterval, clearInterval: cancelEvery = clearInterval } = {}) {
+  function createBackgroundSessions(chrome, { now = () => Date.now(), setInterval: every = setInterval, clearInterval: cancelEvery = clearInterval, onLost = () => {} } = {}) {
     const sessions = new Map();
     let watchdog;
     function identity(sender) {
@@ -10,6 +10,7 @@
       return { tabId: sender.tab.id, videoId };
     }
     function notify(record, message) {
+      try { onLost(record, message); } catch {}
       void chrome.tabs.sendMessage(record.tabId, { type: "MIDROLL_BACKGROUND_LOST", runId: record.runId, message }).catch(() => {});
     }
     function remove(record) {

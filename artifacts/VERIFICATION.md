@@ -1,3 +1,18 @@
+# Kiểm chứng bản 0.1.18 — 12/10/2026
+
+Thêm hộp xử lý lỗi trong lượt chèn/dọn, thông báo hệ thống, dấu ! và tùy chọn đưa đúng cửa sổ/tab Chrome lên trước. Không đổi quy tắc chọn điểm hoặc tự Lưu.
+
+- 105 kiểm thử logic đạt: tính toán/bảo vệ điểm, điều khiển chạy nền, thông báo, run/video ID, lưu trạng thái qua lần worker khởi động lại, chống báo lại khi đã xem, đọc lại sau mất renderer và không cảnh báo khi dừng theo yêu cầu. Phần theo dõi lỗi phải đăng ký thành công trước khi thay đổi điểm; dừng được ngay nếu đăng ký không phản hồi.
+- 61 tình huống chèn, 38 dọn/margin, 7 popup, 6 UI và 19 hộp lỗi đạt trong Chrome headless/hồ sơ tạm với API mô phỏng. Kiểm tra không tự thử lại, xác nhận so với nhóm chưa xác nhận, Later/Escape, mở lại, đọc đúng tab để lập kế hoạch mới, clipboard bị chặn, lỗi quyền thông báo, điều hướng trong khi chạy, bàn phím trong native Studio dialog và kích thước 320×568/640×480/1366×900.
+- 3 tình huống Chrome thật thu nhỏ qua cầu Chrome API/CDP đạt: chèn, dừng và dọn vẫn giữ minimized, phục hồi focus emulation và giữ điểm tự động/chưa rõ loại.
+- 4 tình huống **API extension Chrome thật** đạt trong hồ sơ tạm, Chrome 154.0.8037.99. Nạp extension qua CDP; URL Studio được thay hoàn toàn bằng HTML cục bộ. Bắt đầu/kết thúc không khôi phục cửa sổ; Chrome chấp nhận thông báo PNG; đúng cửa sổ được khôi phục/focus; báo lặp chỉ có một thông báo, xác nhận xóa badge/notification; tắt tự focus giữ minimized, yêu cầu mở lỗi khôi phục đúng tab và dialog. Đã phát hiện API từ chối SVG và thay bằng PNG. Kiểm tra việc Chrome đăng ký thông báo qua notifications.getAll(), không đánh đồng với toast Windows đã hiện nổi bật.
+- Đã xem ảnh ba hộp lỗi; chữ/nút không tràn ngang, nội dung và thao tác cuộn được khi cửa sổ ngắn. Ảnh UI dùng phiên bản 0.1.18, giữ nguyên ảnh 0.1.16. 34 tệp JS/CJS kiểm tra cú pháp đạt. Quyền thêm notifications; activeTab/scripting/storage/debugger vẫn giữ, không thêm quyền host rộng.
+- ZIP 19 tệp, 55.668 byte; CRC và từng byte khớp nguồn. SHA-256: `88da85c3952cfbe195fa8d3184d05ffb3f18755fc1cff1d13d550bf1b1570ec3`.
+
+Chưa kiểm chứng trên YouTube Studio đăng nhập của người dùng, khả năng Windows luôn đưa cửa sổ lên trước, độ nổi bật của toast, việc Lưu hoặc phân phát quảng cáo. Có fallback hộp lỗi/dấu ! khi thông báo hoặc focus bị chặn. Các phần dưới là lịch sử.
+
+---
+
 # Kiểm chứng bản 0.1.17
 
 Mở rộng bảng hướng dẫn popup lên 460 px; tăng cỡ chữ và khoảng cách. Bỏ max-width theo viewport, đặt chiều rộng phần tử gốc để không phụ thuộc vùng hiển thị nhỏ khi khởi tạo. Bảng chèn/dọn trong Studio chỉ đổi số phiên bản.

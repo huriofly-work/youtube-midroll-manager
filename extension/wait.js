@@ -45,7 +45,7 @@
             if (stable >= stableFor) { finish(null, value); return; }
           } else { previousValue = undefined; stable = 0; }
           if (foreground >= timeout || background >= backgroundTimeout) {
-            throw new Error(typeof timeoutMessage === "function" ? timeoutMessage() : timeoutMessage);
+            throw Object.assign(new Error(typeof timeoutMessage === "function" ? timeoutMessage() : timeoutMessage), { code: "confirmation-timeout" });
           }
           if (inBackground && !reportedBackground) {
             reportedBackground = true;
