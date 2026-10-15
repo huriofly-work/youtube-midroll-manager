@@ -6,7 +6,7 @@ const runAlerts = globalThis.MidrollRunAlerts.createRunAlerts(chrome);
 const backgroundSessions = globalThis.MidrollCreateBackgroundSessions(chrome, { onLost: runAlerts.lost });
 
 chrome.runtime.onMessage.addListener((message, sender, reply) => {
-  if (["MIDROLL_RUN_BEGIN", "MIDROLL_RUN_PROGRESS", "MIDROLL_RUN_ERROR", "MIDROLL_RUN_ACK", "MIDROLL_RUN_END"].includes(message?.type)) {
+  if (["MIDROLL_RUN_BEGIN", "MIDROLL_RUN_PROGRESS", "MIDROLL_RUN_ERROR", "MIDROLL_RUN_ACK", "MIDROLL_RUN_END", "MIDROLL_RUN_POSTPONE"].includes(message?.type)) {
     void runAlerts.handle(message, sender).then(reply, () => reply({ ok: false }));
     return true;
   }
@@ -60,11 +60,11 @@ async function openPanel() {
       target: { tabId: tab.id },
       func: () => Boolean(globalThis.MidrollShowPanel?.())
     });
-    if (opened[0]?.result === true) return { ok: true };
-    await chrome.scripting.executeScript({
+    if (opened[0]?.result !== true) await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       files: ["planner.js", "cleanup.js", "wait.js", "studio.js", "runner.js", "background-client.js", "error-copy.js", "run-alerts.js", "content.js"]
     });
+    await runAlerts.restore(tab.id, url.pathname.split("/")[2]);
     return { ok: true };
   } catch (error) {
     if (tab?.url === undefined) return { ok: false, kind: "instruction", message: "Hãy mở một video trong YouTube Studio rồi vào Quản lý vị trí quảng cáo." };

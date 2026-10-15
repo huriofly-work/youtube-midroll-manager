@@ -1,3 +1,18 @@
+# Kiểm chứng bản 0.1.19 — 15/10/2026
+
+Hoàn thiện 5 điểm về thông báo: chống trùng khi đã xem hộp lỗi; đồng bộ Để sau/Escape giữa hộp và hệ thống; khôi phục lỗi/dấu ! sau F5; cảnh báo dừng còn nhóm chưa xác nhận; phân mức theo khả năng ảnh hưởng đến điểm.
+
+- 113 kiểm thử logic đạt. Kiểm tra phân mức, trình bày hộp đã xác nhận kết hợp đúng tab/cửa sổ đang focus, trường hợp thiếu bằng chứng phải dùng thông báo dự phòng, trạng thái hoãn qua lần worker khởi động lại, POSTPONE sai run/video và khôi phục badge khi trang tải xong. Lỗi chưa thay đổi điểm dùng priority 0/silent/không focus; lỗi có thể ảnh hưởng điểm dùng priority 2; dừng còn nhóm chưa xác nhận không gọi thông báo hệ thống hoặc thay focus.
+- 61 tình huống chèn, 38 dọn/margin, 7 popup, 6 UI và 23 hộp lỗi đạt tại máy: 248 bài tổng cộng. Kiểm tra đóng hộp từ nút Để sau trên hệ thống, phân biệt thông báo đã xử lý tại trang với lỗi quyền OS, hủy lượt đọc dữ liệu khi khôi phục lỗi, không bật kế hoạch cũ, sao chép cảnh báo dừng với severity/pending. Nhóm xóa dở hiển thị đúng số điểm đã bấm, giữ số đã xác nhận riêng và dừng trước nhóm sau. Điểm chưa rõ loại cảnh báo vàng và vẫn được bảo vệ.
+- 3 tình huống Chrome thu nhỏ qua cầu API/CDP đạt: chèn, dừng và dọn, giữ trạng thái thu nhỏ và bảo vệ điểm tự động/chưa rõ.
+- 8 tình huống API extension Chrome thật đạt trong hồ sơ tạm, URL Studio được thay bằng HTML cục bộ: giữ 4 bài của 0.1.18; bổ sung Để sau → F5 → mở biểu tượng khôi phục hộp và badge không tạo lại thông báo; hộp hiện trong tab/cửa sổ thật đang focus không tạo thông báo trùng; lỗi khởi động không khôi phục cửa sổ thu nhỏ; dừng chưa xác nhận giữ badge màu vàng nâu, không báo hệ thống/focus. Chrome thực tế xóa badge khi tải trang; đã thêm khôi phục ở page completion và mở bảng.
+- Đã xem ảnh hộp lỗi 320×568 và 1366×900; mức lỗi chưa thay đổi điểm có viền vàng nâu, nội dung/nút không tràn ngang và cuộn được khi thiếu chiều cao. Ảnh mới có hậu tố v0.1.19, giữ ảnh các phiên bản trước. Cú pháp 34 tệp JS/CJS và Git whitespace đạt; quyền không đổi so với 0.1.18.
+- ZIP 19 tệp, 57.096 byte; CRC và từng byte khớp nguồn. SHA-256: `2cab8331da177bf3bd18360a2c44d56afa82f6ad63717239a787c88f9bb456b5`.
+
+Kiểm tra API thật xác nhận Chrome đăng ký thông báo và trạng thái cửa sổ; chưa xác nhận độ nổi bật của toast Windows, khả năng luôn đưa Chrome lên trước hoặc luồng trên YouTube Studio đăng nhập của người dùng. Không dùng tài khoản/dữ liệu YouTube thật trong các bài thử. Các phần dưới là lịch sử.
+
+---
+
 # Kiểm chứng bản 0.1.18 — 12/10/2026
 
 Thêm hộp xử lý lỗi trong lượt chèn/dọn, thông báo hệ thống, dấu ! và tùy chọn đưa đúng cửa sổ/tab Chrome lên trước. Không đổi quy tắc chọn điểm hoặc tự Lưu.

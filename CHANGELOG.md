@@ -1,5 +1,9 @@
 # Lịch sử thay đổi
 
+0.1.19 hoàn thiện phân mức và đồng bộ thông báo. Khi hộp lỗi đã hiện trong tab Studio đang được xem, không bật thêm thông báo hệ thống/focus. Lỗi chưa thay đổi điểm dùng thông báo nhẹ, không tự focus; lỗi có thể ảnh hưởng điểm giữ mức cao; dừng còn nhóm xóa chưa xác nhận dùng cảnh báo vàng và dấu !, không báo hệ thống. Điểm chưa rõ loại dùng cảnh báo vàng trong xem trước và vẫn được giữ nguyên.
+
+Để sau/Escape đóng cả hộp và thông báo hệ thống, giữ lỗi/dấu ! và không phát lại khi có báo cáo đến muộn; nút Để sau trên hệ thống cũng đóng hộp. Sau F5 cùng video, khôi phục dấu ! (Chrome tự xóa badge khi tải trang); bấm biểu tượng khôi phục lỗi chưa xem mà không tự thông báo/focus. Dừng lượt đọc dữ liệu đang chờ trước khi khôi phục lỗi để phản hồi đến muộn không ghi đè lỗi hoặc bật kế hoạch cũ. Không đổi thuật toán chèn/dọn, quyền hoặc việc tự Lưu.
+
 0.1.18 thêm cơ chế xử lý lỗi trong lượt chèn/dọn: hộp modal nổi bật, thông báo hệ thống có nút Mở Studio/Để sau và dấu ! để mở lại sự cố. Hiển thị số điểm đã xác nhận, mốc đang xử lý và nhóm xóa chưa xác nhận. Mặc định khôi phục/chọn đúng cửa sổ và tab Chrome khi gặp lỗi; tùy chọn dùng chung cho hai chức năng để tắt tự focus. Không gây chú ý hệ thống khi thành công, người dùng dừng hoặc chỉ sai đầu vào. Một sự cố dùng một thông báo, không tự thử lại thao tác, luôn cần đọc lại/xem trước mới. Bảo vệ điểm tự động và việc tự Lưu giữ nguyên.
 
 Thêm quyền notifications, icon PNG (đã kiểm tra Chrome thật; SVG bị API từ chối), lưu trạng thái tối thiểu trong storage.session để qua lần worker khởi động lại. Phần chạy nền vẫn báo mất kết nối khi renderer không phản hồi; kiểm tra đúng video/run ID trước khi mở lỗi, không mở lại tab đã đóng hoặc điều hướng sang video cũ. Bàn phím và cửa sổ nhỏ được kiểm tra, gồm hộp lỗi nằm trong dialog Studio. Chi tiết kiểm chứng ở artifacts/VERIFICATION.md.

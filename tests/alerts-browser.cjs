@@ -50,7 +50,8 @@ const { chromium } = require('playwright');
       assert.equal(await page.evaluate(() => fixture.clicks + fixture.deletes + fixture.saves), 0);
     });
     await scenario('startup error provides an actionable modal, confirmed count and no unsafe retry', async () => {
-      await failStartup(); assert.match(await ui('alert-title').innerText(), /Đã dừng chèn/);
+      await failStartup(); assert.match(await ui('alert-title').innerText(), /Chưa thay đổi điểm/);
+      assert.equal(await ui('run-alert').getAttribute('data-severity'), 'error');
       assert.match(await ui('alert-count').innerText(), /0\/4/); assert.match(await ui('alert-guidance').innerText(), /quyền extension/);
       const log = await requests(); assert.equal(log.filter((r) => r.type === 'MIDROLL_RUN_ERROR').length, 1);
       assert.equal(log[0].runId, log.find((r) => r.type === 'MIDROLL_RUN_ERROR').runId);
@@ -59,6 +60,7 @@ const { chromium } = require('playwright');
     });
     await scenario('Later and Escape preserve the incident for reopening; inspect acknowledges without editing', async () => {
       await failStartup(); await ui('alert-later').click();
+      assert.ok((await requests()).some((r) => r.type === 'MIDROLL_RUN_POSTPONE'));
       assert.equal((await requests()).some((r) => r.type === 'MIDROLL_RUN_ACK'), false);
       await page.evaluate(() => MidrollShowPanel()); await alert(); await page.keyboard.press('Escape');
       assert.equal(await ui('run-alert').isVisible(), false); assert.equal(await ui('review-error').isVisible(), true);
@@ -84,6 +86,40 @@ const { chromium } = require('playwright');
       await page.evaluate(() => { fixture.notificationDenied = true; }); await failStartup();
       await ui('alert-notice').waitFor({ state: 'visible' }); assert.match(await ui('alert-notice').innerText(), /Chưa hiện được/);
       assert.equal(await ui('alert-message').innerText(), 'Không bật được chế độ nền.');
+    });
+    await scenario('a locally handled modal does not claim that OS notifications failed', async () => {
+      await page.evaluate(() => { globalThis.alertMessage = async (message) => message.type === 'MIDROLL_RUN_ERROR' ? { ok: true, local: true, notified: false } : { ok: true }; });
+      await failStartup(); assert.equal(await ui('alert-notice').isVisible(), false);
+      assert.equal((await requests()).find((r) => r.type === 'MIDROLL_RUN_ERROR').presented, true);
+    });
+    await scenario('desktop Later closes the modal and rejects old-run or other-video requests', async () => {
+      await failStartup(); const runId = (await requests())[0].runId;
+      await page.evaluate((runId) => fixture.messageListener({ type: 'MIDROLL_HIDE_RUN_ERROR', videoId: 'other', runId }), runId);
+      assert.equal(await ui('run-alert').isVisible(), true);
+      await page.evaluate((runId) => fixture.messageListener({ type: 'MIDROLL_HIDE_RUN_ERROR', videoId: 'test123', runId }), runId);
+      assert.equal(await ui('run-alert').isVisible(), false); assert.equal(await ui('review-error').isVisible(), true);
+      assert.equal((await requests()).some((r) => r.type === 'MIDROLL_RUN_ACK'), false);
+    });
+    await scenario('a restored incident cancels a late duration read and locks any old preview', async () => {
+      await preview(); await page.evaluate(() => {
+        const original = chrome.runtime.sendMessage;
+        chrome.runtime.sendMessage = (message) => message.type === 'MIDROLL_READ_DURATION' ? new Promise((resolve) => { fixture.lateRead = resolve; }) : original(message);
+        document.querySelector('.duration').remove();
+        MidrollRefreshDuration();
+      });
+      await page.waitForFunction(() => Boolean(fixture.lateRead)); assert.deepEqual(await restoredIssue(), { ok: true });
+      await page.evaluate(() => fixture.lateRead({ seconds: 600, videoId: 'test123' }));
+      assert.equal(await ui('run-alert').isVisible(), true); assert.equal(await ui('alert-message').innerText(), 'Đã mất kết nối khi chạy.');
+      assert.equal(await ui('start').isDisabled(), true); assert.equal(await ui('preview').isVisible(), false);
+      assert.equal(await page.evaluate(() => fixture.clicks + fixture.deletes + fixture.saves), 0);
+    });
+    await scenario('an uncertain-stop warning remains copyable with its severity and pending count', async () => {
+      await page.evaluate(() => { Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (text) => { fixture.copiedWarning = text; } } }); });
+      await restoredIssue('cleanup', { code: 'stopped-unconfirmed' }); await ui('alert-copy').click();
+      await page.waitForFunction(() => Boolean(fixture.copiedWarning));
+      const report = await page.evaluate(() => JSON.parse(fixture.copiedWarning));
+      assert.equal(report.severity, 'warning'); assert.equal(report.pending, 2); assert.equal(report.message, 'Đã mất kết nối khi chạy.');
+      assert.equal(await ui('run-alert').getAttribute('data-severity'), 'warning');
     });
     await scenario('copy fallback is selectable inside the modal and does not include a video URL', async () => {
       await page.evaluate(() => { Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async () => { throw Error('blocked'); } } }); document.execCommand = () => false; });

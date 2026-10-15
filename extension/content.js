@@ -8,7 +8,7 @@
     return;
   }
   const P = globalThis.MidrollPlanner;
-  const VERSION = "0.1.18";
+  const VERSION = "0.1.19";
   const host = document.createElement("div");
   globalThis.MidrollPanelHost = host;
   host.id = HOST_ID;
@@ -86,6 +86,9 @@
       .check input { width: 16px; height: 16px; flex-shrink: 0; accent-color: #1967d2; margin: 2px 0; }
       #run-alert { color: #233149; background: #fff; width: 480px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); border: 1px solid #e7babc; border-top: 5px solid #b32d32; border-radius: 14px; padding: 22px; box-shadow: 0 20px 70px #12203955; font: 14px/1.6 Arial, sans-serif; overflow: auto; overscroll-behavior: contain; }
       #run-alert::backdrop { background: #12203970; }
+      #run-alert[data-severity="error"], #run-alert[data-severity="warning"] { border-color: #e4c797; border-top-color: #a85b00; }
+      #status[data-tone="warning"] { background: #fff8e8; border-color: #e4c797; color: #805000; }
+      #review-error[data-severity="error"], #review-error[data-severity="warning"] { background: #fff8e8; border-color: #e4c797; color: #805000; }
       #run-alert h3 { margin: 0 0 12px; font-size: 19px; line-height: 1.4; }
       #alert-message { white-space: pre-line; overflow-wrap: anywhere; }
       #alert-count { background: #f3f7fc; padding: 10px 12px; border-radius: 8px; font-weight: 600; }
@@ -123,11 +126,11 @@
         <button id="review-error" type="button" hidden>⚠ Xem lỗi và cách xử lý</button>
         <button id="copy-error" type="button" hidden>Sao chép thông tin lỗi</button><p id="copy-status" role="status" hidden></p><textarea id="error-details" readonly hidden aria-label="Thông tin lỗi để sao chép"></textarea>
         <section id="preview" hidden><h3 id="preview-title">Xem trước thay đổi</h3><p id="preview-note">Chưa thay đổi điểm nào. Kiểm tra danh sách trước khi chạy.</p><div id="summary"></div><ul id="times" aria-label="Các điểm sẽ thêm"></ul></section>
-        <details class="notification-settings"><summary>Thông báo khi gặp lỗi</summary><label class="check"><input id="focus-on-error" type="checkbox" checked>Đưa Chrome lên trước khi cần kiểm tra</label><p class="help">Khi tắt, bấm thông báo hệ thống để mở Studio. Lượt chạy bình thường và nút Dừng không đưa Chrome lên trước.</p></details>
+        <details class="notification-settings"><summary>Thông báo khi gặp lỗi</summary><label class="check"><input id="focus-on-error" type="checkbox" checked>Đưa Chrome lên trước khi cần kiểm tra</label><p class="help">Áp dụng khi lỗi có thể ảnh hưởng điểm. Lỗi chưa bắt đầu và nút Dừng không đưa Chrome lên trước. Khi tắt, bấm thông báo hệ thống để mở Studio.</p></details>
       </main>
       <div class="action-bar"><div id="run-progress" hidden><span id="progress-text"></span><progress id="progress" max="1" value="0" aria-label="Tiến độ đã xác nhận"></progress></div><div id="insert-actions" class="actions"><button id="read" type="button">Xem trước</button><button id="start" type="button" class="primary" disabled>Chèn điểm</button></div><div id="cleanup-actions" class="actions" hidden><button id="cleanup-read" type="button">Xem trước</button><button id="cleanup-start" type="button" class="danger" disabled>Dọn điểm</button></div><button id="stop" type="button" hidden>Dừng</button><footer>Xem trước tự đọc dữ liệu mới · Bạn tự bấm Tiếp tục/Lưu</footer></div>
     </section>
-    <dialog id="run-alert" role="alertdialog" aria-labelledby="alert-title" aria-describedby="alert-message alert-count alert-guidance">
+    <dialog id="run-alert" role="alertdialog" aria-modal="true" aria-labelledby="alert-title" aria-describedby="alert-message alert-count alert-guidance">
       <h3 id="alert-title">⚠ Đã dừng — cần kiểm tra</h3><p id="alert-message"></p><p id="alert-count"></p><p id="alert-guidance"></p><p class="alert-save">Extension chưa tự lưu thay đổi. Bạn kiểm tra Studio trước khi bấm Tiếp tục/Lưu.</p>
       <div class="alert-actions"><button id="alert-inspect" class="primary" type="button" autofocus>Kiểm tra trong Studio</button><button id="alert-preview" type="button">Đọc lại và xem trước</button><button id="alert-later" type="button">Để sau</button><button id="alert-copy" type="button">Sao chép thông tin lỗi</button></div><p id="alert-notice" hidden></p><p id="alert-copy-status" role="status" hidden></p><textarea id="alert-error-details" readonly hidden aria-label="Thông tin lỗi để sao chép"></textarea>
     </dialog>`;
@@ -173,7 +176,7 @@
   let statusRevision = 0;
   let lastError = "";
   let activeTab = "insert";
-  let activeRun = null, lastIssue = null;
+  let activeRun = null, lastIssue = null, postponedRun = null;
   let focusTouched = false;
   const sendAlert = (message, signal) => globalThis.MidrollWait.request(() => chrome.runtime.sendMessage(message), { signal, timeout: 5000, timeoutValue: { ok: false } }).catch(() => ({ ok: false }));
   function runStage(stage) {
@@ -188,12 +191,15 @@
       void sendAlert({ type: "MIDROLL_RUN_ACK", runId: lastIssue.runId });
     }
   }
-  function showRunError(detail) {
+  function showRunError(detail, reveal = true) {
     lastIssue = detail;
-    host.hidden = false;
-    globalThis.MidrollStudio.mountPanel(host);
+    lastError = detail.message;
+    const level = globalThis.MidrollRunAlerts.severity(detail);
+    $("run-alert").dataset.severity = level;
+    $("review-error").dataset.severity = level;
+    if (reveal) { host.hidden = false; globalThis.MidrollStudio.mountPanel(host); }
     $("review-error").hidden = false;
-    $("alert-title").textContent = detail.mode === "cleanup" ? "⚠ Đã dừng dọn — cần kiểm tra" : "⚠ Đã dừng chèn — cần kiểm tra";
+    $("alert-title").textContent = level === "warning" ? "⚠ Đã dừng — còn điểm cần kiểm tra" : level === "error" ? "⚠ Chưa thay đổi điểm — cần kiểm tra" : detail.mode === "cleanup" ? "⚠ Đã dừng dọn — cần kiểm tra" : "⚠ Đã dừng chèn — cần kiểm tra";
     $("alert-message").textContent = detail.message;
     $("alert-count").textContent = `Đã xác nhận ${detail.mode === "cleanup" ? "xóa" : "thêm"} ${detail.confirmed}/${detail.total} điểm.`;
     $("alert-guidance").textContent = detail.code === "alert-monitor-unavailable" ? "Tải lại extension trong chrome://extensions, rồi mở lại bảng để đọc dữ liệu và xem trước. Chưa bắt đầu chèn hoặc dọn."
@@ -205,24 +211,28 @@
     $("alert-copy-status").hidden = true;
     $("alert-copy").disabled = false;
     $("alert-error-details").hidden = true;
-    if (!$("run-alert").open) $("run-alert").showModal();
-    $("alert-inspect").focus();
+    if (reveal) { if (!$("run-alert").open) $("run-alert").showModal(); $("alert-inspect").focus(); }
   }
   async function publishError(error) {
     if (activeRun?.videoId !== location.pathname.match(/^\/video\/([A-Za-z0-9_-]+)\//)?.[1]) return;
     const detail = globalThis.MidrollRunAlerts.issue(error, activeRun);
-    try { showRunError(detail); } catch { /* Background notification still reports the original run failure. */ }
-    const result = await sendAlert({ type: "MIDROLL_RUN_ERROR", runId: detail.runId, issue: detail });
+    try { showRunError(detail, postponedRun !== detail.runId); } catch { /* Background notification still reports the original run failure. */ }
+    const result = await sendAlert({ type: "MIDROLL_RUN_ERROR", runId: detail.runId, issue: detail, presented: $("run-alert").open && host.isConnected && !host.hidden });
     if (lastIssue !== detail || !$("run-alert").open || result.acknowledged) return;
-    if (!result.ok || !result.notified) {
+    if (result.postponed) { postponedRun = detail.runId; closeAlert(); return; }
+    if (!result.ok || (!result.notified && !result.local && !result.quiet)) {
       $("alert-notice").textContent = "Chưa hiện được thông báo hệ thống. Kiểm tra quyền thông báo của extension và cài đặt Chrome/Windows; thông tin lỗi vẫn có trong bảng này.";
       $("alert-notice").hidden = false;
     }
   }
   $("review-error").addEventListener("click", () => { if (lastIssue) showRunError(lastIssue); });
   $("alert-inspect").addEventListener("click", () => { closeAlert(true); $("status").scrollIntoView({ block: "nearest" }); $("review-error").focus(); });
-  $("alert-later").addEventListener("click", () => closeAlert());
-  $("run-alert").addEventListener("cancel", (event) => { event.preventDefault(); closeAlert(); });
+  function postponeAlert() {
+    closeAlert();
+    if (lastIssue) { postponedRun = lastIssue.runId; void sendAlert({ type: "MIDROLL_RUN_POSTPONE", runId: lastIssue.runId }); }
+  }
+  $("alert-later").addEventListener("click", postponeAlert);
+  $("run-alert").addEventListener("cancel", (event) => { event.preventDefault(); postponeAlert(); });
   $("run-alert").addEventListener("keydown", (event) => {
     if (event.key !== "Tab") return;
     const controls = [...$("run-alert").querySelectorAll("button:not(:disabled), textarea:not([hidden])")].filter((node) => node.getClientRects().length);
@@ -233,10 +243,15 @@
   });
   $("alert-preview").addEventListener("click", () => { const mode = lastIssue?.mode; closeAlert(true); touched = true; selectTab(mode === "cleanup" ? "cleanup" : "insert", false, false); void refreshDuration(true); });
   chrome.runtime.onMessage.addListener((message, sender, reply) => {
-    if (message?.type !== "MIDROLL_SHOW_RUN_ERROR") return false;
+    if (!["MIDROLL_SHOW_RUN_ERROR", "MIDROLL_HIDE_RUN_ERROR"].includes(message?.type)) return false;
     const videoId = location.pathname.match(/^\/video\/([A-Za-z0-9_-]+)\//)?.[1];
+    if (message.type === "MIDROLL_HIDE_RUN_ERROR") {
+      if (sender?.id !== chrome.runtime.id || message.videoId !== videoId || ![lastIssue?.runId, activeRun?.runId].includes(message.runId) || !message.runId) { reply?.({ ok: false }); return false; }
+      postponedRun = message.runId; if (lastIssue?.runId === message.runId) closeAlert(); reply?.({ ok: true }); return false;
+    }
     if (sender?.id !== chrome.runtime.id || message.videoId !== videoId || controller || (activeRun && activeRun.runId !== message.issue?.runId) || !message.issue?.message) { reply?.({ ok: false }); return false; }
-    status(message.issue.message, "error"); showRunError(message.issue); reply?.({ ok: true }); return false;
+    durationController?.abort(); durationController = null; invalidate(); busy(false);
+    status(message.issue.message, globalThis.MidrollRunAlerts.severity(message.issue) === "warning" ? "warning" : "error"); showRunError(message.issue); reply?.({ ok: true }); return false;
   });
 
   function status(message, tone = "") {
@@ -405,7 +420,7 @@
         $("cleanup-start").disabled = cleanupPlan.removals.length === 0;
         $("cleanup-start").textContent = `Dọn ${cleanupPlan.removals.length} điểm`;
         const unknown = cleanupPlan.unknown ? `\nCó ${cleanupPlan.unknown} điểm chưa xác định được thủ công/tự động; giữ nguyên các điểm đó.` : "";
-        status((cleanupPlan.removals.length ? "Kiểm tra danh sách sẽ xóa, rồi bấm Dọn điểm. Chưa thay đổi điểm nào." : "Không có điểm được nhận diện cần dọn.") + unknown, cleanupPlan.unknown && !cleanupPlan.removals.length ? "error" : "");
+        status((cleanupPlan.removals.length ? "Kiểm tra danh sách sẽ xóa, rồi bấm Dọn điểm. Chưa thay đổi điểm nào." : "Không có điểm được nhận diện cần dọn.") + unknown, cleanupPlan.unknown ? "warning" : "");
         $("preview").scrollIntoView({ block: "start" });
         return;
       }
@@ -520,8 +535,10 @@
       }), { signal: controller.signal, runId: activeRun.runId });
       status(`Đã xác nhận xóa ${result.removed} điểm thủ công; giữ các điểm khác và điểm tự động.\nBạn hãy kiểm tra trong Studio, rồi tự bấm Tiếp tục/Lưu.`, "success");
     } catch (error) {
-      if (error.name !== "AbortError") failure = error;
-      status(`${error.name === "AbortError" ? `Đã dừng theo yêu cầu.${error.pendingRemoved ? ` Đã bấm xóa ${error.pendingRemoved} điểm trong nhóm đang xử lý; chưa xác nhận nhóm.` : ""}` : error.message}\nĐã xác nhận xóa ${removed} điểm; chưa lưu. Kiểm tra cả nhóm đang xử lý.`, error.name === "AbortError" ? "" : "error");
+      const uncertainStop = error.name === "AbortError" && error.pendingRemoved > 0;
+      if (uncertainStop) failure = Object.assign(new Error(`Đã dừng theo yêu cầu. Đã bấm xóa ${error.pendingRemoved} điểm trong nhóm đang xử lý nhưng chưa xác nhận; cần kiểm tra nhóm này.`), { code: "stopped-unconfirmed", pendingRemoved: error.pendingRemoved });
+      else if (error.name !== "AbortError") failure = error;
+      status(`${failure?.message || (error.name === "AbortError" ? "Đã dừng theo yêu cầu." : error.message)}\nĐã xác nhận xóa ${removed} điểm; chưa lưu. Kiểm tra cả nhóm đang xử lý.`, uncertainStop ? "warning" : error.name === "AbortError" ? "" : "error");
     } finally {
       controller = null;
       invalidate({ keepPreview: true }); busy(false);
@@ -542,7 +559,7 @@
     try { studio = globalThis.MidrollStudio.diagnostics(); } catch { studio = { available: false }; }
     const interval = $("interval").value.trim();
     const report = { version: VERSION, message: lastError, intervalSeconds: /^\d+$/.test(interval) ? interval : null, studio,
-      ...(lastIssue ? { code: lastIssue.code, mode: lastIssue.mode, confirmed: lastIssue.confirmed, total: lastIssue.total, phase: lastIssue.phase, points: lastIssue.points } : {}) };
+      ...(lastIssue ? { code: lastIssue.code, mode: lastIssue.mode, confirmed: lastIssue.confirmed, total: lastIssue.total, phase: lastIssue.phase, points: lastIssue.points, pending: lastIssue.pending, severity: globalThis.MidrollRunAlerts.severity(lastIssue) } : {}) };
     const modal = $("run-alert").open, button = $(modal ? "alert-copy" : "copy-error"), output = $(modal ? "alert-copy-status" : "copy-status");
     button.disabled = true;
     const copied = await globalThis.MidrollErrorCopy.copy(JSON.stringify(report, null, 2), $(modal ? "alert-error-details" : "error-details"), () => current === statusRevision && modal === $("run-alert").open);

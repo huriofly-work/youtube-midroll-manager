@@ -1,4 +1,4 @@
-# Chèn và dọn điểm quảng cáo YouTube — 0.1.18
+# Chèn và dọn điểm quảng cáo YouTube — 0.1.19
 
 Dành cho Chrome từ 118, YouTube Studio tiếng Việt, một video đang mở. Bạn xem lại và tự bấm Tiếp tục/Lưu. Không cần API key, OAuth hoặc cài Node.js.
 
@@ -7,7 +7,7 @@ Dành cho Chrome từ 118, YouTube Studio tiếng Việt, một video đang mở
 1. Giải nén ZIP vào một thư mục cố định, có `manifest.json` ngay bên trong.
 2. Mở `chrome://extensions`, bật **Chế độ dành cho nhà phát triển**, chọn **Tải tiện ích đã giải nén**, rồi chọn thư mục đó.
 3. Khi cập nhật, thay tệp trong đúng thư mục đã cài và bấm **Tải lại** extension. Nếu cài từ thư mục mã nguồn `extension`, chỉ cần Tải lại.
-4. Lưu các chỉnh sửa Studio muốn giữ trước khi F5 trang. Mở lại trình quảng cáo và kiểm tra bảng có **v0.1.18**.
+4. Lưu các chỉnh sửa Studio muốn giữ trước khi F5 trang. Mở lại trình quảng cáo và kiểm tra bảng có **v0.1.19**.
 
 Extension cần quyền debugger để giữ riêng tab Studio hoạt động khi bạn dùng ứng dụng khác. Chrome hiện thanh thông báo trong lúc chạy; phiên kết thúc khi xong, dừng hoặc gặp lỗi. Chấp nhận quyền/bật lại extension nếu Chrome yêu cầu.
 
@@ -59,14 +59,21 @@ Sau khi bắt đầu, có thể dùng ứng dụng khác hoặc thu nhỏ Chrome
 
 ## Khi bị dừng hoặc gặp lỗi
 
-Lỗi khi đang chèn/dọn hiện hộp **Đã dừng — cần kiểm tra**, kèm thông báo hệ thống và dấu **!** trên biểu tượng extension. Hộp ghi nguyên nhân, số điểm **đã xác nhận** và điểm/nhóm cuối còn cần kiểm tra; điểm đã bấm xóa nhưng chưa xác nhận được ghi riêng.
+Hộp lỗi ghi nguyên nhân, số điểm **đã xác nhận** và điểm/nhóm cuối còn cần kiểm tra; điểm đã bấm xóa nhưng chưa xác nhận được ghi riêng. Chương trình phân mức theo khả năng ảnh hưởng đến danh sách:
+
+- **Lỗi có thể ảnh hưởng điểm**: hộp/dấu ! màu đỏ. Nếu hộp đã hiện trong tab và cửa sổ Studio đang được xem, không bật thêm thông báo hệ thống hoặc yêu cầu focus. Khi đang làm việc khác, có thông báo hệ thống và có thể đưa Chrome lên trước theo cài đặt. Nếu mất kết nối, chưa xác nhận hộp lỗi hiện được, vẫn dùng thông báo hệ thống dự phòng.
+- **Lỗi chưa thay đổi điểm**: hộp/dấu ! màu vàng nâu; thông báo hệ thống nhẹ, không yêu cầu âm thanh, không tự đưa Chrome lên trước. Ví dụ không bật được chế độ chạy nền hoặc dữ liệu đổi trước khi bắt đầu.
+- **Bạn dừng khi còn nhóm xóa chưa xác nhận**: cảnh báo vàng ghi số điểm đã bấm xóa và các mốc cần kiểm tra. Giữ dấu !, không thông báo hệ thống hoặc tự focus. Dừng bình thường khi không còn nhóm chưa xác nhận chỉ hiện trạng thái dừng.
+- **Điểm chưa rõ thủ công/tự động**: cảnh báo vàng trong phần xem trước, giữ nguyên các điểm đó.
 
 - **Kiểm tra trong Studio**: đóng hộp để bạn đối chiếu danh sách; xác nhận đã xem thông báo, không tiếp tục chạy.
 - **Đọc lại và xem trước**: đọc dữ liệu hiện tại, chọn đúng tab của lượt bị lỗi và lập kế hoạch mới. Bạn vẫn phải tự bấm Chèn/Dọn sau khi xem lại.
-- **Để sau** hoặc Escape: đóng hộp, giữ lỗi để mở lại bằng **Xem lỗi và cách xử lý** hoặc biểu tượng extension. Thông báo hệ thống có thể bị Windows đóng theo cài đặt; dấu ! còn đến khi bạn xác nhận đã xem hoặc bắt đầu lượt mới.
+- **Để sau** hoặc Escape: đóng cả hộp lẫn thông báo hệ thống, giữ lỗi/dấu ! để mở lại bằng **Xem lỗi và cách xử lý** hoặc biểu tượng extension. Nút Để sau trên thông báo hệ thống cũng đóng hộp lỗi nếu đang mở. Báo cáo đến muộn không tự mở lại thông báo đã hoãn.
 - **Sao chép thông tin lỗi**: sao chép theo yêu cầu, không tự gửi đi.
 
-Mục **Thông báo khi gặp lỗi** dùng chung cho hai tab. Mặc định bật **Đưa Chrome lên trước khi cần kiểm tra**: chỉ khi lượt chạy gặp lỗi, chọn đúng tab Studio và khôi phục cửa sổ nếu đang thu nhỏ. Tắt tùy chọn nếu muốn ít gián đoạn; bấm thông báo hoặc **Mở Studio để kiểm tra** sẽ đưa cửa sổ lên trước. Hệ điều hành có thể hạn chế focus/thông báo; khi đó kiểm tra dấu ! trên biểu tượng. Một lỗi không liên tục phát lại thông báo hoặc đưa cửa sổ lên trước. Dừng theo yêu cầu, hoàn tất và lỗi nhập liệu/xem trước không phát cảnh báo hệ thống.
+Mục **Thông báo khi gặp lỗi** dùng chung cho hai tab. Mặc định bật **Đưa Chrome lên trước khi cần kiểm tra**: áp dụng cho lỗi có thể ảnh hưởng điểm khi bạn đang làm việc khác, chọn đúng tab Studio và khôi phục cửa sổ nếu đang thu nhỏ. Tắt tùy chọn nếu muốn ít gián đoạn; bấm thông báo hoặc **Mở Studio để kiểm tra** sẽ đưa cửa sổ lên trước. Hệ điều hành có thể hạn chế focus/thông báo; khi đó kiểm tra dấu ! trên biểu tượng. Một lỗi không liên tục phát lại thông báo hoặc đưa cửa sổ lên trước. Hoàn tất và lỗi nhập liệu/xem trước không phát cảnh báo hệ thống.
+
+Sau khi F5 cùng video, dấu ! được khôi phục khi trang tải xong; bấm biểu tượng extension sẽ mở lại lỗi chưa xác nhận đã xem, kể cả đã chọn Để sau. Bước này không tự phát thông báo mới hoặc tiếp tục chạy. Nội dung lỗi là thông tin của lượt trước; dữ liệu thực tế trong Studio có thể đã thay đổi sau khi tải lại. Cần đọc lại và xem trước để lập kế hoạch mới. Trạng thái này chỉ giữ trong phiên Chrome, không phải bản sao lưu điểm quảng cáo.
 
 Không có nút bỏ qua kiểm tra hoặc tự tiếp tục từ thao tác chưa rõ kết quả. Sau lỗi phải đọc dữ liệu và xem trước mới trước khi chạy. Trạng thái thông báo được giữ trong phiên Chrome qua lần service worker khởi động lại; đóng tab hoặc chuyển video sẽ xóa thông báo của video cũ.
 

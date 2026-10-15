@@ -10,6 +10,9 @@
     confirmed: run.confirmed, total: run.total, phase: run.phase,
     points: run.points || [], pending: Number.isInteger(error.pendingRemoved) ? error.pendingRemoved : null
   });
+  // Classify by what may have changed, never by an untrusted severity field.
+  const severity = (detail) => detail.code === "stopped-unconfirmed" ? "warning"
+    : ["automatic-changed", "preservation-failed"].includes(detail.code) || detail.confirmed > 0 || ["processing", "verifying"].includes(detail.phase) ? "critical" : "error";
   function createRunAlerts(api) {
     const key = "midrollRunAlerts";
     let memory = {}, queue = Promise.resolve();
@@ -43,10 +46,23 @@
       await api.tabs.update(tab.id, { active: true });
       await api.windows.update(tab.windowId, { focused: true });
     }
-    async function display(record, first) {
-      await api.action.setBadgeBackgroundColor({ tabId: record.tabId, color: "#b32d32" }).catch(() => {});
+    async function viewing(record) {
+      try { const tab = await target(record), window = await api.windows.get(tab.windowId); return tab.active === true && window.focused === true && window.state !== "minimized"; } catch { return false; }
+    }
+    async function badge(record) {
+      const level = severity(record.issue);
+      await api.action.setBadgeBackgroundColor({ tabId: record.tabId, color: level === "critical" ? "#b32d32" : "#a85b00" }).catch(() => {});
       await api.action.setBadgeText({ tabId: record.tabId, text: "!" }).catch(() => {});
       await api.action.setTitle({ tabId: record.tabId, title: "Lượt chạy đã dừng — cần kiểm tra trong Studio" }).catch(() => {});
+    }
+    async function display(record, first, presented) {
+      const level = severity(record.issue);
+      await badge(record);
+      if (record.postponed || level === "warning") return { ok: true, notified: false, quiet: true, postponed: Boolean(record.postponed) };
+      if (presented && await viewing(record)) {
+        await api.notifications.clear(record.notificationId).catch(() => {});
+        return { ok: true, notified: false, local: true };
+      }
       let notified = false, focused = false;
       try {
         if (await api.notifications.getPermissionLevel() === "granted") {
@@ -54,7 +70,7 @@
             type: "basic", iconUrl: api.runtime.getURL("alert-icon.png"),
             title: record.mode === "cleanup" ? "Đã dừng dọn điểm — cần kiểm tra" : "Đã dừng chèn điểm — cần kiểm tra",
             message: `${record.confirmed}/${record.total} điểm đã xác nhận. Chưa lưu. ${record.issue.message}`.slice(0, 280),
-            buttons: [{ title: "Mở Studio để kiểm tra" }, { title: "Để sau" }], requireInteraction: true, priority: 2, silent: !first
+            buttons: [{ title: "Mở Studio để kiểm tra" }, { title: "Để sau" }], requireInteraction: level === "critical", priority: level === "critical" ? 2 : 0, silent: !first || level !== "critical"
           };
           if (!first) notified = await api.notifications.update(record.notificationId, data);
           // A dismissed notification must not be recreated by a late report.
@@ -64,7 +80,7 @@
       if (first) {
         try {
           const saved = await api.storage.local.get({ focusOnRunError: true });
-          const foreground = saved.focusOnRunError !== false;
+          const foreground = level === "critical" && saved.focusOnRunError !== false;
           await focus(record, foreground); focused = foreground;
         } catch {
           try { await focus(record, false); } catch {}
@@ -72,12 +88,12 @@
       }
       return { ok: true, notified, focused };
     }
-    async function report(records, record, detail) {
+    async function report(records, record, detail, presented = false) {
       const first = !record.alerted;
       record.issue = detail; record.alerted = true;
       await write(records);
       if (record.acknowledged) return { ok: true, notified: false, acknowledged: true };
-      return display(record, first);
+      return display(record, first, presented);
     }
     async function handle(message, sender) {
       return serial(async () => {
@@ -104,7 +120,10 @@
             record.confirmed = message.issue.confirmed;
             record.phase = message.issue.phase; record.points = message.issue.points;
             const detail = issue({ message: message.issue.message, code: /^[a-z-]{1,60}$/.test(message.issue.code || "") ? message.issue.code : "run-failed", pendingRemoved: message.issue.pending }, record);
-            return report(records, record, detail);
+            return report(records, record, detail, message.presented === true);
+          }
+          if (message.type === "MIDROLL_RUN_POSTPONE") {
+            await postpone(records, record); return { ok: true };
           }
           if (message.type === "MIDROLL_RUN_ACK") {
             record.acknowledged = true; await write(records); await clear(record); return { ok: true };
@@ -122,45 +141,61 @@
       if (!current || current.runId !== record.runId) return;
       await report(records, current, issue({ code: "background-lost", message }, current));
     }).catch(() => {});
+    async function postpone(records, record) {
+      record.postponed = true; await write(records);
+      await api.notifications.clear(record.notificationId).catch(() => {});
+      try { await target(record); await api.tabs.sendMessage(record.tabId, { type: "MIDROLL_HIDE_RUN_ERROR", videoId: record.videoId, runId: record.runId }); } catch {}
+    }
+    async function deliver(record) {
+      await target(record);
+      const message = { type: "MIDROLL_SHOW_RUN_ERROR", videoId: record.videoId, issue: record.issue };
+      let response;
+      try { response = await api.tabs.sendMessage(record.tabId, message); }
+      catch {
+        await target(record);
+        await api.scripting.executeScript({ target: { tabId: record.tabId }, files: ["planner.js", "cleanup.js", "wait.js", "studio.js", "runner.js", "background-client.js", "error-copy.js", "run-alerts.js", "content.js"] });
+        await target(record);
+        response = await api.tabs.sendMessage(record.tabId, message);
+      }
+      if (response?.ok) await api.notifications.clear(record.notificationId).catch(() => {});
+    }
+    const restore = (tabId, videoId) => serial(async () => {
+      const record = (await read())[tabId];
+      if (record?.videoId !== videoId || !record.issue || record.acknowledged) return;
+      try { await target(record); await badge(record); await deliver(record); } catch {}
+    });
     async function open(notificationId) {
       return serial(async () => {
         const records = await read(), record = Object.values(records).find((r) => r.notificationId === notificationId);
         if (!record?.issue || record.acknowledged) return;
         try {
-          await target(record);
           await focus(record, true);
-          const message = { type: "MIDROLL_SHOW_RUN_ERROR", videoId: record.videoId, issue: record.issue };
-          let response;
-          try { response = await api.tabs.sendMessage(record.tabId, message); }
-          catch {
-            await target(record);
-            await api.scripting.executeScript({ target: { tabId: record.tabId }, files: ["planner.js", "cleanup.js", "wait.js", "studio.js", "runner.js", "background-client.js", "error-copy.js", "run-alerts.js", "content.js"] });
-            await target(record);
-            response = await api.tabs.sendMessage(record.tabId, message);
-          }
-          // Opening is not a handling decision: Later must keep the badge.
-          if (response?.ok) await api.notifications.clear(record.notificationId).catch(() => {});
+          await deliver(record);
         } catch { /* A closed/navigated tab must never be reopened or redirected. */ }
       });
     }
     api.notifications?.onClicked?.addListener((id) => { void open(id).catch(() => {}); });
     api.notifications?.onButtonClicked?.addListener((id, index) => {
       if (index === 0) void open(id).catch(() => {});
-      else if (index === 1) void api.notifications.clear(id).catch(() => {});
+      else if (index === 1) void serial(async () => {
+        const records = await read(), record = Object.values(records).find((r) => r.notificationId === id);
+        if (record && !record.acknowledged) await postpone(records, record);
+      }).catch(() => {});
     });
     api.tabs.onRemoved.addListener((tabId) => { void serial(async () => {
       const records = await read(); if (!records[tabId]) return;
       await clear(records[tabId]); delete records[tabId]; await write(records);
     }).catch(() => {}); });
     api.tabs.onUpdated.addListener((tabId, change) => {
-      if (!change.url) return;
+      if (!change.url && change.status !== "complete") return;
       void serial(async () => {
         const records = await read(), record = records[tabId];
-        if (record && video(change.url) !== record.videoId) { await clear(record); delete records[tabId]; await write(records); }
+        if (record && change.url && video(change.url) !== record.videoId) { await clear(record); delete records[tabId]; await write(records); }
+        else if (record?.issue && !record.acknowledged) { try { await target(record); await badge(record); } catch {} }
       }).catch(() => {});
     });
-    return { handle, lost, open };
+    return { handle, lost, open, restore };
   }
-  root.MidrollRunAlerts = { issue, createRunAlerts };
+  root.MidrollRunAlerts = { issue, severity, createRunAlerts };
   if (typeof module !== "undefined" && module.exports) module.exports = root.MidrollRunAlerts;
 })(globalThis);

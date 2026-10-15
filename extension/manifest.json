@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Chèn điểm quảng cáo YouTube",
-  "version": "0.1.18",
+  "version": "0.1.19",
   "description": "Chèn theo khoảng cách; dọn điểm thủ công có cảnh báo, Đang xem xét hoặc quá gần. Giữ quảng cáo tự động; bạn tự lưu.",
   "permissions": [
     "activeTab",

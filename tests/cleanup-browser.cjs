@@ -346,7 +346,11 @@ const { chromium } = require('playwright');
       await preview(); await ui('cleanup-start').click(); await page.waitForFunction(() => fixture.deletes === 5);
       await ui('stop').click(); await done();
       assert.equal(await page.evaluate(() => fixture.deletes), 5);
-      assert.match(await ui('status').innerText(), /nhóm đang xử lý; chưa xác nhận nhóm/);
+      assert.match(await ui('status').innerText(), /nhóm đang xử lý nhưng chưa xác nhận/);
+      assert.equal(await ui('status').getAttribute('data-tone'), 'warning');
+      assert.equal(await ui('run-alert').getAttribute('data-severity'), 'warning');
+      assert.match(await ui('alert-guidance').innerText(), /Đã bấm xóa 5 điểm nhưng chưa xác nhận/);
+      assert.equal(await ui('alert-notice').isVisible(), false);
       assert.equal(await page.evaluate(() => fixture.backgroundRunId), null);
     });
     await scenario('lost focus cleanup confirms all points serially without retrying clicks', async () => {

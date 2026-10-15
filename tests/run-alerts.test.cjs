@@ -1,12 +1,12 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { createRunAlerts, issue } = require('../extension/run-alerts.js');
+const { createRunAlerts, issue, severity } = require('../extension/run-alerts.js');
 const id = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 const sender = { id: 'test', frameId: 0, tab: { id: 7, url: 'https://studio.youtube.com/video/test123/monetization' } };
 function fixture(options = {}) {
   const calls = [], events = {}, data = {}, notifications = new Set();
   const event = (name) => ({ addListener(fn) { events[name] = fn; } });
-  let tab = { id: 7, windowId: 9, url: sender.tab.url };
+  let tab = { id: 7, windowId: 9, url: sender.tab.url, active: !options.inactive };
   const api = {
     runtime: { id: 'test', getURL: (path) => 'chrome-extension://test/' + path },
     storage: { session: { async get() { return structuredClone(data); }, async set(values) { Object.assign(data, structuredClone(values)); } }, local: { async get() { return { focusOnRunError: options.focus !== false }; } } },
@@ -19,13 +19,13 @@ function fixture(options = {}) {
       async clear(id) { calls.push(['clear', id]); return notifications.delete(id); }
     },
     tabs: { onUpdated: event('updated'), onRemoved: event('removed'), async get() { return { ...tab }; }, async update(id, value) { calls.push(['tab', id, value]); }, async sendMessage(id, value) { calls.push(['show', id, value]); if (options.reload && !calls.some((c) => c[0] === 'inject')) throw Error('no receiver'); return { ok: true }; } },
-    windows: { async get() { return { state: 'minimized' }; }, async update(id, value) { calls.push(['window', id, value]); if (options.failFocus && value.focused) throw Error('OS blocked'); } },
+    windows: { async get() { return { state: options.viewing ? 'normal' : 'minimized', focused: Boolean(options.viewing) }; }, async update(id, value) { calls.push(['window', id, value]); if (options.failFocus && value.focused) throw Error('OS blocked'); } },
     scripting: { async executeScript(value) { calls.push(['inject', value]); } }
   };
   const manager = createRunAlerts(api);
   const send = (value, context = sender) => manager.handle({ runId: id, ...value }, context);
   const begin = () => send({ type: 'MIDROLL_RUN_BEGIN', videoId: 'test123', mode: 'insert', total: 4 });
-  const error = (changes = {}) => send({ type: 'MIDROLL_RUN_ERROR', issue: { code: 'confirmation-timeout', message: 'Chưa xác nhận mốc.', confirmed: 1, phase: 'processing', points: [180], pending: null, ...changes } });
+  const error = (changes = {}, delivery = {}) => send({ type: 'MIDROLL_RUN_ERROR', ...delivery, issue: { code: 'confirmation-timeout', message: 'Chưa xác nhận mốc.', confirmed: 1, phase: 'processing', points: [180], pending: null, ...changes } });
   return { manager, api, calls, data, events, begin, send, error, navigate: (url) => { tab.url = url; } };
 }
 test('run error restores the exact window, selects its tab and creates one actionable notification', async () => {
@@ -117,4 +117,62 @@ test('issue fields distinguish processing uncertainty from confirmed totals with
   const detail = issue(Object.assign(Error('Chưa xác nhận'), { pendingRemoved: 3 }), { runId: id, mode: 'cleanup', confirmed: 5, total: 12, phase: 'processing', points: [60,120] });
   assert.equal(detail.pending, 3); assert.equal(detail.confirmed, 5); assert.equal(detail.code, 'run-failed');
   assert.equal('videoId' in detail, false); assert.equal('url' in detail, false);
+});
+test('visible confirmed modal suppresses desktop duplicates; focus alone cannot suppress fallback', async () => {
+  const f = fixture({ viewing: true }); await f.begin(); assert.equal((await f.error({}, { presented: true })).local, true);
+  assert.equal(f.calls.some((c) => ['window','tab','create'].includes(c[0])), false);
+  assert.ok(f.calls.some((c) => c[0] === 'setBadgeText' && c[1].text === '!'));
+  for (const options of [{ viewing: true, inactive: true }, { viewing: false }, { viewing: true }]) {
+    const other = fixture(options); await other.begin();
+    const result = await other.error({}, { presented: options.inactive || !options.viewing });
+    assert.equal(result.notified, true);
+  }
+});
+test('startup errors are silent transient notifications and never foreground Chrome', async () => {
+  const f = fixture(); await f.begin(); await f.error({ confirmed: 0, phase: 'starting', points: [] });
+  const data = f.calls.find((c) => c[0] === 'create')[2]; assert.equal(data.priority, 0); assert.equal(data.silent, true); assert.equal(data.requireInteraction, false);
+  assert.deepEqual(f.calls.find((c) => c[0] === 'window')[2], { drawAttention: true }); assert.equal(f.calls.some((c) => c[0] === 'tab'), false);
+});
+test('an uncertain user stop keeps an amber incident without system alarm or focus', async () => {
+  const f = fixture(); await f.begin(); const result = await f.error({ code: 'stopped-unconfirmed', pending: 2 });
+  assert.equal(result.quiet, true); assert.equal(f.calls.some((c) => ['create','window','tab'].includes(c[0])), false);
+  assert.equal(f.calls.find((c) => c[0] === 'setBadgeBackgroundColor')[1].color, '#a85b00');
+});
+test('postponing synchronizes modal and desktop, persists through worker restart and suppresses late delivery', async () => {
+  const f = fixture(); await f.begin(); await f.error(); await f.send({ type: 'MIDROLL_RUN_POSTPONE' });
+  assert.equal(f.data.midrollRunAlerts[7].postponed, true); assert.equal(f.data.midrollRunAlerts[7].acknowledged, undefined);
+  assert.equal(f.calls.at(-1)[2].type, 'MIDROLL_HIDE_RUN_ERROR');
+  const count = f.calls.filter((c) => ['create','update','window','tab'].includes(c[0])).length;
+  const restored = createRunAlerts(f.api);
+  const result = await restored.handle({ type: 'MIDROLL_RUN_ERROR', runId: id, issue: f.data.midrollRunAlerts[7].issue }, sender);
+  assert.equal(result.postponed, true); assert.equal(f.calls.filter((c) => ['create','update','window','tab'].includes(c[0])).length, count);
+});
+test('desktop Later closes the matching modal, while stale postpone commands cannot clear a new run', async () => {
+  const f = fixture(); await f.begin(); await f.error();
+  f.events.button(f.data.midrollRunAlerts[7].notificationId, 1); await f.send({ type: 'MIDROLL_RUN_PROGRESS', confirmed: 1, phase: 'checking', points: [] });
+  assert.equal(f.data.midrollRunAlerts[7].postponed, true); assert.ok(f.calls.some((c) => c[0] === 'show' && c[2].type === 'MIDROLL_HIDE_RUN_ERROR'));
+  const count = f.calls.length;
+  assert.equal((await f.send({ type: 'MIDROLL_RUN_POSTPONE', runId: 'ffffffff-bbbb-cccc-dddd-eeeeeeeeeeee' })).ok, false); assert.equal(f.calls.length, count);
+});
+test('toolbar restores a postponed incident after reload without auto focus or acknowledgment', async () => {
+  const f = fixture({ reload: true }); await f.begin(); await f.error(); await f.send({ type: 'MIDROLL_RUN_POSTPONE' });
+  const count = f.calls.filter((c) => ['window','tab','create'].includes(c[0])).length;
+  const restored = createRunAlerts(f.api); await restored.restore(7, 'test123');
+  assert.ok(f.calls.some((c) => c[0] === 'show' && c[2].type === 'MIDROLL_SHOW_RUN_ERROR'));
+  assert.equal(f.data.midrollRunAlerts[7].acknowledged, undefined); assert.equal(f.calls.filter((c) => ['window','tab','create'].includes(c[0])).length, count);
+  const calls = f.calls.length; await restored.restore(7, 'other'); assert.equal(f.calls.length, calls);
+});
+test('severity follows confirmed or possible changes and keeps user-stop warnings distinct', () => {
+  assert.equal(severity({ phase: 'starting', confirmed: 0 }), 'error'); assert.equal(severity({ phase: 'checking', confirmed: 0 }), 'error');
+  for (const detail of [{ phase: 'processing' }, { phase: 'verifying' }, { confirmed: 1 }, { code: 'automatic-changed' }, { code: 'preservation-failed' }]) assert.equal(severity(detail), 'critical');
+  assert.equal(severity({ code: 'stopped-unconfirmed', phase: 'processing', confirmed: 5 }), 'warning');
+});
+test('page completion restores the badge only for an unresolved incident on the same video', async () => {
+  const f = fixture(); await f.begin(); await f.error(); const count = f.calls.filter((c) => c[0] === 'setBadgeText').length;
+  f.events.updated(7, { status: 'complete' }); await f.send({ type: 'MIDROLL_RUN_PROGRESS', confirmed: 1, phase: 'checking', points: [] });
+  assert.equal(f.calls.filter((c) => c[0] === 'setBadgeText').length, count + 1);
+  assert.equal(f.calls.filter((c) => c[0] === 'create').length, 1);
+  await f.send({ type: 'MIDROLL_RUN_ACK' }); const afterAck = f.calls.length;
+  f.events.updated(7, { status: 'complete' }); await f.send({ type: 'MIDROLL_RUN_PROGRESS', confirmed: 1, phase: 'checking', points: [] });
+  assert.equal(f.calls.length, afterAck);
 });
