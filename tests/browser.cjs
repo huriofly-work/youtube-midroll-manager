@@ -753,7 +753,9 @@ const { chromium } = require('playwright');
     await ready();
     await preview();
     await fs.mkdir(path.resolve(__dirname, '../artifacts'), { recursive: true });
-    await page.screenshot({ path: path.resolve(__dirname, '../artifacts/preview.png') });
+    // Versioned names keep earlier releases' tracked screenshots unchanged.
+    const version = JSON.parse(await fs.readFile(path.resolve(__dirname, '../extension/manifest.json'), 'utf8')).version;
+    await page.screenshot({ path: path.resolve(__dirname, `../artifacts/preview-v${version}.png`) });
     console.log(`${passed} local browser scenarios passed. Live Studio acceptance is still pending.`);
   } finally {
     await browser.close();

@@ -8,7 +8,7 @@
     return;
   }
   const P = globalThis.MidrollPlanner;
-  const VERSION = "0.1.19";
+  const VERSION = "0.1.21";
   const host = document.createElement("div");
   globalThis.MidrollPanelHost = host;
   host.id = HOST_ID;
@@ -60,7 +60,8 @@
       .actions { display: grid; gap: 8px; grid-template-columns: 1fr 1fr; }
       .primary { background: #1967d2; color: #fff; border-color: #1967d2; }
       .danger { background: #b32d32; color: #fff; border-color: #b32d32; }
-      #stop { color: #a72428; border-color: #e7babc; width: 100%; }
+      #stop { color: #a72428; border-color: #e7babc; }
+      #run-state { margin: 0 0 8px; font-size: 12px; color: #596a80; white-space: pre-line; }
       #run-progress { margin-bottom: 10px; font-size: 12px; color: #596a80; }
       progress { display: block; width: 100%; height: 6px; margin-top: 6px; accent-color: #1967d2; }
       #status { padding: 10px 12px; border: 1px solid #e1e9f4; border-radius: 8px; background: #f3f7fc; white-space: pre-line; overflow-wrap: anywhere; margin-top: 14px; font-size: 12px; }
@@ -128,7 +129,7 @@
         <section id="preview" hidden><h3 id="preview-title">Xem trước thay đổi</h3><p id="preview-note">Chưa thay đổi điểm nào. Kiểm tra danh sách trước khi chạy.</p><div id="summary"></div><ul id="times" aria-label="Các điểm sẽ thêm"></ul></section>
         <details class="notification-settings"><summary>Thông báo khi gặp lỗi</summary><label class="check"><input id="focus-on-error" type="checkbox" checked>Đưa Chrome lên trước khi cần kiểm tra</label><p class="help">Áp dụng khi lỗi có thể ảnh hưởng điểm. Lỗi chưa bắt đầu và nút Dừng không đưa Chrome lên trước. Khi tắt, bấm thông báo hệ thống để mở Studio.</p></details>
       </main>
-      <div class="action-bar"><div id="run-progress" hidden><span id="progress-text"></span><progress id="progress" max="1" value="0" aria-label="Tiến độ đã xác nhận"></progress></div><div id="insert-actions" class="actions"><button id="read" type="button">Xem trước</button><button id="start" type="button" class="primary" disabled>Chèn điểm</button></div><div id="cleanup-actions" class="actions" hidden><button id="cleanup-read" type="button">Xem trước</button><button id="cleanup-start" type="button" class="danger" disabled>Dọn điểm</button></div><button id="stop" type="button" hidden>Dừng</button><footer>Xem trước tự đọc dữ liệu mới · Bạn tự bấm Tiếp tục/Lưu</footer></div>
+      <div class="action-bar"><div id="run-progress" hidden><span id="progress-text"></span><progress id="progress" max="1" value="0" aria-label="Tiến độ đã xác nhận"></progress></div><div id="insert-actions" class="actions"><button id="read" type="button">Xem trước</button><button id="start" type="button" class="primary" disabled>Chèn điểm</button></div><div id="cleanup-actions" class="actions" hidden><button id="cleanup-read" type="button">Xem trước</button><button id="cleanup-start" type="button" class="danger" disabled>Dọn điểm</button></div><p id="run-state" role="status" aria-live="polite" hidden></p><div id="run-actions" class="actions" hidden><button id="pause" type="button" hidden>Tạm dừng</button><button id="stop" type="button" title="Kết thúc lượt chạy, giữ thay đổi chưa lưu để kiểm tra" hidden>Dừng / Hủy lượt</button></div><footer>Xem trước tự đọc dữ liệu mới · Bạn tự bấm Tiếp tục/Lưu</footer></div>
     </section>
     <dialog id="run-alert" role="alertdialog" aria-modal="true" aria-labelledby="alert-title" aria-describedby="alert-message alert-count alert-guidance">
       <h3 id="alert-title">⚠ Đã dừng — cần kiểm tra</h3><p id="alert-message"></p><p id="alert-count"></p><p id="alert-guidance"></p><p class="alert-save">Extension chưa tự lưu thay đổi. Bạn kiểm tra Studio trước khi bấm Tiếp tục/Lưu.</p>
@@ -170,6 +171,7 @@
   let cleanupPlan = null;
   let adapter = null;
   let controller = null;
+  let runControl = null;
   let durationController = null;
   let panelRoute = location.pathname;
   let touched = false;
@@ -182,13 +184,39 @@
   function runStage(stage) {
     if (!activeRun) return;
     Object.assign(activeRun, stage);
+    if (stage.phase === "verifying") {
+      $("pause").disabled = true;
+      $("run-state").textContent = "Đang kiểm tra kết quả cuối. Có thể Dừng / Hủy lượt; thay đổi chưa được lưu.";
+    }
     void sendAlert({ type: "MIDROLL_RUN_PROGRESS", ...activeRun });
+  }
+  // The task can settle seconds before busy(false) while the background
+  // session stops; no checkpoint remains, so Pause must not stay clickable.
+  const lockPause = () => { $("pause").disabled = true; };
+  function createRunControl(currentAdapter, mode) {
+    if (typeof globalThis.MidrollRunControl?.create !== "function") {
+      throw Object.assign(new Error("Chưa nạp được thành phần điều khiển lượt chạy. Hãy tải lại extension và làm mới Studio trước khi Xem trước lại."), { code: "run-control-unavailable" });
+    }
+    return globalThis.MidrollRunControl.create({
+      getFingerprint: () => mode === "cleanup" ? currentAdapter.cleanupSnapshot().cleanupFingerprint : currentAdapter.snapshot().fingerprint,
+      onChange: (state) => {
+        $("pause").textContent = state === "paused" ? "Tiếp tục" : state === "pausing" ? "Đang tạm dừng…" : state === "resuming" ? "Đang kiểm tra…" : "Tạm dừng";
+        $("pause").disabled = !["running", "paused"].includes(state);
+        const message = state === "pausing" ? "Đang xác nhận xong điểm/nhóm hiện tại trước khi tạm dừng…"
+          : state === "paused" ? "Đã tạm dừng. Tiếp tục để xử lý phần còn lại, hoặc Dừng / Hủy lượt. Chưa lưu thay đổi."
+          : state === "resuming" ? "Đang kiểm tra lại dữ liệu Studio…"
+          : "Đang chạy. Dừng / Hủy lượt sẽ giữ thay đổi chưa lưu để kiểm tra.";
+        $("run-state").textContent = message;
+        // #run-state already announces the state; #status carries only the count.
+        if (state === "paused" || state === "running") status(`Đã xác nhận ${activeRun.mode === "cleanup" ? "xóa" : "thêm"} ${activeRun.confirmed}/${activeRun.total} điểm. Chưa lưu thay đổi.`);
+      }
+    });
   }
   function closeAlert(acknowledge = false) {
     $("run-alert").close();
     if (acknowledge && lastIssue) {
       lastIssue.acknowledged = true;
-      void sendAlert({ type: "MIDROLL_RUN_ACK", runId: lastIssue.runId });
+      if (lastIssue.runId) void sendAlert({ type: "MIDROLL_RUN_ACK", runId: lastIssue.runId });
     }
   }
   function showRunError(detail, reveal = true) {
@@ -202,7 +230,8 @@
     $("alert-title").textContent = level === "warning" ? "⚠ Đã dừng — còn điểm cần kiểm tra" : level === "error" ? "⚠ Chưa thay đổi điểm — cần kiểm tra" : detail.mode === "cleanup" ? "⚠ Đã dừng dọn — cần kiểm tra" : "⚠ Đã dừng chèn — cần kiểm tra";
     $("alert-message").textContent = detail.message;
     $("alert-count").textContent = `Đã xác nhận ${detail.mode === "cleanup" ? "xóa" : "thêm"} ${detail.confirmed}/${detail.total} điểm.`;
-    $("alert-guidance").textContent = detail.code === "alert-monitor-unavailable" ? "Tải lại extension trong chrome://extensions, rồi mở lại bảng để đọc dữ liệu và xem trước. Chưa bắt đầu chèn hoặc dọn."
+    $("alert-guidance").textContent = detail.code === "run-control-unavailable" ? "Tải lại extension trong chrome://extensions. Kiểm tra các chỉnh sửa đang dở trước khi làm mới trang Studio, rồi mở lại bảng và Xem trước. Chưa bắt đầu chèn hoặc dọn."
+      : detail.code === "alert-monitor-unavailable" ? "Tải lại extension trong chrome://extensions, rồi mở lại bảng để đọc dữ liệu và xem trước. Chưa bắt đầu chèn hoặc dọn."
       : ["automatic-changed", "preservation-failed"].includes(detail.code) ? "Kiểm tra toàn bộ danh sách điểm và lựa chọn quảng cáo tự động trong Studio trước khi lưu. Sau đó đọc lại để lập kế hoạch mới."
       : detail.phase === "starting" ? "Lỗi xảy ra khi bật chế độ chạy nền. Kiểm tra quyền extension và đóng DevTools của tab Studio, rồi đọc lại để xem trước."
       : detail.phase === "processing" ? `Kiểm tra ${detail.mode === "cleanup" ? "nhóm" : "điểm"} đang xử lý${detail.points?.length ? `: ${detail.points.map(P.formatTime).join(", ")}` : ""}. ${detail.pending !== null && detail.pending !== undefined ? `Đã bấm xóa ${detail.pending} điểm nhưng chưa xác nhận. ` : "Kết quả thao tác này chưa được xác nhận. "}Sau đó đọc lại để lập kế hoạch mới.`
@@ -216,7 +245,10 @@
   async function publishError(error) {
     if (activeRun?.videoId !== location.pathname.match(/^\/video\/([A-Za-z0-9_-]+)\//)?.[1]) return;
     const detail = globalThis.MidrollRunAlerts.issue(error, activeRun);
-    try { showRunError(detail, postponedRun !== detail.runId); } catch { /* Background notification still reports the original run failure. */ }
+    try { showRunError(detail, !detail.runId || postponedRun !== detail.runId); } catch { /* Background notification still reports the original run failure. */ }
+    // A failure while creating the run ID still needs a local error dialog,
+    // but it has no valid identity to register with the background worker.
+    if (!detail.runId) return;
     const result = await sendAlert({ type: "MIDROLL_RUN_ERROR", runId: detail.runId, issue: detail, presented: $("run-alert").open && host.isConnected && !host.hidden });
     if (lastIssue !== detail || !$("run-alert").open || result.acknowledged) return;
     if (result.postponed) { postponedRun = detail.runId; closeAlert(); return; }
@@ -229,7 +261,7 @@
   $("alert-inspect").addEventListener("click", () => { closeAlert(true); $("status").scrollIntoView({ block: "nearest" }); $("review-error").focus(); });
   function postponeAlert() {
     closeAlert();
-    if (lastIssue) { postponedRun = lastIssue.runId; void sendAlert({ type: "MIDROLL_RUN_POSTPONE", runId: lastIssue.runId }); }
+    if (lastIssue) { postponedRun = lastIssue.runId; if (lastIssue.runId) void sendAlert({ type: "MIDROLL_RUN_POSTPONE", runId: lastIssue.runId }); }
   }
   $("alert-later").addEventListener("click", postponeAlert);
   $("run-alert").addEventListener("cancel", (event) => { event.preventDefault(); postponeAlert(); });
@@ -307,6 +339,12 @@
     $("close").disabled = value;
     $("stop").hidden = !value;
     $("stop").disabled = false;
+    $("run-actions").hidden = !value;
+    $("pause").hidden = !value;
+    $("pause").disabled = false;
+    $("pause").textContent = "Tạm dừng";
+    $("run-state").hidden = !value;
+    $("run-state").textContent = value ? "Đang chạy. Dừng / Hủy lượt sẽ giữ thay đổi chưa lưu để kiểm tra." : "";
     $("start").disabled = value || !plan?.additions.length;
     $("cleanup-read").disabled = value || Boolean(durationController);
     $("cleanup-start").disabled = value || !cleanupPlan?.removals.length;
@@ -476,18 +514,22 @@
     const currentPlan = plan;
     const currentAdapter = adapter;
     lastIssue = null; $("review-error").hidden = true;
-    activeRun = { runId: crypto.randomUUID(), videoId: location.pathname.split("/")[2], mode: "insert", total: currentPlan.additions.length, confirmed: 0, phase: "starting", points: [] };
-    controller = new AbortController();
-    busy(true);
+    activeRun = { runId: null, videoId: location.pathname.split("/")[2], mode: "insert", total: currentPlan.additions.length, confirmed: 0, phase: "starting", points: [] };
     let inserted = 0;
     let failure;
-    status("Đang bật chế độ chạy nền cho tab Studio…");
     try {
-      const monitor = await sendAlert({ type: "MIDROLL_RUN_BEGIN", ...activeRun }, controller.signal);
+      activeRun.runId = crypto.randomUUID();
+      controller = new AbortController();
+      busy(true);
+      status("Đang bật chế độ chạy nền cho tab Studio…");
+      const monitorRequest = sendAlert({ type: "MIDROLL_RUN_BEGIN", ...activeRun }, controller.signal);
+      runControl = createRunControl(currentAdapter, "insert");
+      const monitor = await monitorRequest;
       controller.signal.throwIfAborted();
       if (!monitor.ok) throw Object.assign(new Error("Không kết nối được phần theo dõi lỗi. Chưa xử lý điểm nào; tải lại extension rồi mở lại bảng."), { code: "alert-monitor-unavailable" });
       const result = await globalThis.MidrollBackgroundClient.run(({ signal }) => globalThis.MidrollRunner.runPlan(currentAdapter, currentPlan, {
         signal,
+        checkpoint: (options) => runControl.checkpoint(options),
         onStage: runStage,
         onWaiting: ({ inserted: count, total, seconds, message }) => {
           status(`${message}\nĐã xác nhận ${count}/${total} điểm${Number.isFinite(seconds) ? ` · Mốc đang xử lý: ${P.formatTime(seconds)}` : ""}. Chưa lưu.`);
@@ -498,14 +540,15 @@
           updateProgress(progress.inserted, progress.total);
           status(`Đã thêm ${progress.inserted}/${progress.total} điểm. Mốc vừa xử lý: ${P.formatTime(progress.seconds)}.\nChưa lưu thay đổi.`);
         }
-      }), { signal: controller.signal, runId: activeRun.runId });
+      }).finally(lockPause), { signal: controller.signal, runId: activeRun.runId });
       status(`Đã xác nhận thêm ${result.inserted} điểm; giữ các điểm cũ.${result.skipped ? ` Bỏ qua thêm ${result.skipped} mốc đã có.` : ""}\nBạn hãy kiểm tra trong Studio, rồi tự bấm Tiếp tục/Lưu.`, "success");
     } catch (error) {
       const stopped = error.name === "AbortError";
       if (!stopped) failure = error;
-      status(`${stopped ? "Đã dừng theo yêu cầu." : error.message}\nĐã xác nhận thêm ${inserted} điểm; chưa lưu. Kiểm tra cả điểm cuối đang nhập. Các điểm đã thêm vẫn nằm trong bản chỉnh sửa Studio.`, stopped ? "" : "error");
+      status(`${stopped ? "Đã dừng theo yêu cầu." : error.message}\n${activeRun.phase === "starting" ? "Chưa chèn điểm nào trong lượt này." : `Đã xác nhận thêm ${inserted} điểm; chưa lưu. Kiểm tra cả điểm cuối đang nhập. Các điểm đã thêm vẫn nằm trong bản chỉnh sửa Studio.`}`, stopped ? "" : "error");
     } finally {
       controller = null;
+      runControl = null;
       invalidate({ keepPreview: true });
       busy(false);
       $("status").scrollIntoView({ block: "nearest" });
@@ -517,39 +560,51 @@
     if (!cleanupPlan || controller || activeTab !== "cleanup") return;
     const currentPlan = cleanupPlan, currentAdapter = adapter;
     lastIssue = null; $("review-error").hidden = true;
-    activeRun = { runId: crypto.randomUUID(), videoId: location.pathname.split("/")[2], mode: "cleanup", total: currentPlan.removals.length, confirmed: 0, phase: "starting", points: [] };
-    controller = new AbortController();
-    busy(true);
+    activeRun = { runId: null, videoId: location.pathname.split("/")[2], mode: "cleanup", total: currentPlan.removals.length, confirmed: 0, phase: "starting", points: [] };
     let removed = 0;
     let failure;
-    status("Đang bật chế độ chạy nền để dọn điểm…");
     try {
-      const monitor = await sendAlert({ type: "MIDROLL_RUN_BEGIN", ...activeRun }, controller.signal);
+      activeRun.runId = crypto.randomUUID();
+      controller = new AbortController();
+      busy(true);
+      status("Đang bật chế độ chạy nền để dọn điểm…");
+      const monitorRequest = sendAlert({ type: "MIDROLL_RUN_BEGIN", ...activeRun }, controller.signal);
+      runControl = createRunControl(currentAdapter, "cleanup");
+      const monitor = await monitorRequest;
       controller.signal.throwIfAborted();
       if (!monitor.ok) throw Object.assign(new Error("Không kết nối được phần theo dõi lỗi. Chưa xử lý điểm nào; tải lại extension rồi mở lại bảng."), { code: "alert-monitor-unavailable" });
       const result = await globalThis.MidrollBackgroundClient.run(({ signal }) => globalThis.MidrollCleanup.runPlan(currentAdapter, currentPlan, {
         signal,
+        checkpoint: (options) => runControl.checkpoint(options),
         onStage: runStage,
         onWaiting: (progress) => status(`${progress.message}\nĐã xác nhận xóa ${progress.removed}/${progress.total} điểm. Chưa lưu.`),
         onProgress: (progress) => { removed = progress.removed; activeRun.confirmed = removed; updateProgress(removed, progress.total); status(`Đã xác nhận xóa ${removed}/${progress.total} điểm · ${P.formatTime(progress.seconds)}.\nChưa lưu thay đổi.`); }
-      }), { signal: controller.signal, runId: activeRun.runId });
+      }).finally(lockPause), { signal: controller.signal, runId: activeRun.runId });
       status(`Đã xác nhận xóa ${result.removed} điểm thủ công; giữ các điểm khác và điểm tự động.\nBạn hãy kiểm tra trong Studio, rồi tự bấm Tiếp tục/Lưu.`, "success");
     } catch (error) {
       const uncertainStop = error.name === "AbortError" && error.pendingRemoved > 0;
       if (uncertainStop) failure = Object.assign(new Error(`Đã dừng theo yêu cầu. Đã bấm xóa ${error.pendingRemoved} điểm trong nhóm đang xử lý nhưng chưa xác nhận; cần kiểm tra nhóm này.`), { code: "stopped-unconfirmed", pendingRemoved: error.pendingRemoved });
       else if (error.name !== "AbortError") failure = error;
-      status(`${failure?.message || (error.name === "AbortError" ? "Đã dừng theo yêu cầu." : error.message)}\nĐã xác nhận xóa ${removed} điểm; chưa lưu. Kiểm tra cả nhóm đang xử lý.`, uncertainStop ? "warning" : error.name === "AbortError" ? "" : "error");
+      status(`${failure?.message || (error.name === "AbortError" ? "Đã dừng theo yêu cầu." : error.message)}\n${activeRun.phase === "starting" ? "Chưa xóa điểm nào trong lượt này." : `Đã xác nhận xóa ${removed} điểm; chưa lưu. Kiểm tra cả nhóm đang xử lý.`}`, uncertainStop ? "warning" : error.name === "AbortError" ? "" : "error");
     } finally {
       controller = null;
+      runControl = null;
       invalidate({ keepPreview: true }); busy(false);
       $("status").scrollIntoView({ block: "nearest" });
       if (failure) void publishError(failure).catch(() => {});
       else void sendAlert({ type: "MIDROLL_RUN_END", runId: activeRun.runId });
     }
   });
+  $("pause").addEventListener("click", () => {
+    if (!controller || controller.signal.aborted || !runControl) return;
+    if (runControl.state === "paused") runControl.resume();
+    else runControl.pause();
+  });
   $("stop").addEventListener("click", () => {
     controller?.abort();
     $("stop").disabled = true;
+    $("pause").disabled = true;
+    $("run-state").textContent = "Đang dừng lượt chạy… Giữ thay đổi chưa lưu để kiểm tra.";
     status("Đang dừng… Chưa lưu; các thay đổi vẫn nằm trong bản chỉnh sửa.");
   });
   async function copyError() {

@@ -78,6 +78,30 @@ const { createBackgroundSessions } = require('../extension/background-session.js
     assert.deepEqual(errors, []);
     console.log('PASS cancel in minimized Chrome stops further clicks and restores focus emulation');
 
+    for (const finish of ['resume', 'stop']) {
+      calls.length = 0;
+      await prepare();
+      await page.evaluate(() => { fixture.delay = 500; MidrollPanelHost.shadowRoot.getElementById('start').click(); });
+      await page.waitForFunction(() => fixture.clicks === 1, null, { polling: 100 });
+      await page.evaluate(() => MidrollPanelHost.shadowRoot.getElementById('pause').click());
+      await page.waitForFunction(() => MidrollPanelHost.shadowRoot.getElementById('pause').textContent === 'Tiếp tục', null, { polling: 100 });
+      assert.equal(await page.evaluate(() => fixture.clicks), 1);
+      assert.equal(calls.filter((c) => c === 'detach').length, 0);
+      if (finish === 'resume') {
+        await page.waitForFunction(() => fixture.backgroundRequests.includes('MIDROLL_BACKGROUND_PING'), null, { polling: 100, timeout: 20000 });
+        assert.equal(await page.evaluate(() => fixture.clicks), 1);
+        assert.equal(await page.evaluate(() => MidrollPanelHost.shadowRoot.getElementById('pause').textContent), 'Tiếp tục');
+      }
+      assert.equal((await cdp.send('Browser.getWindowBounds', { windowId })).bounds.windowState, 'minimized');
+      await page.evaluate((id) => MidrollPanelHost.shadowRoot.getElementById(id).click(), finish === 'resume' ? 'pause' : 'stop');
+      await page.waitForFunction(() => MidrollPanelHost.shadowRoot.getElementById('stop').hidden, null, { polling: 100 });
+      assert.deepEqual(await page.evaluate(() => [fixture.clicks, fixture.deletes, fixture.saves]), [finish === 'resume' ? 4 : 1, 0, 0]);
+      assert.equal(calls.filter((c) => c === 'detach').length, 1);
+      assert.equal((await cdp.send('Browser.getWindowBounds', { windowId })).bounds.windowState, 'minimized');
+      assert.equal(await page.evaluate(() => document.hasFocus()), false);
+      console.log(`PASS paused minimized Chrome ${finish}: no extra clicks, lease kept alive, background session released`);
+    }
+
     calls.length = 0;
     await prepare();
     const original = await page.locator('.ad-row input').evaluateAll((nodes) => nodes.map((n) => n.value));

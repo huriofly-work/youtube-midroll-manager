@@ -70,12 +70,13 @@
     };
   }
 
-  async function runPlan(adapter, plan, { signal, onProgress = () => {}, onWaiting = () => {}, onStage = () => {} } = {}) {
+  async function runPlan(adapter, plan, { signal, checkpoint, onProgress = () => {}, onWaiting = () => {}, onStage = () => {} } = {}) {
     onStage({ phase: "checking", points: [] });
     let removed = 0;
     let expected = plan.fingerprint;
     if (adapter.removePoints) {
       for (let offset = 0; offset < plan.removals.length; offset += 5) {
+        if (checkpoint) await checkpoint({ signal });
         signal?.throwIfAborted();
         const targets = plan.removals.slice(offset, offset + 5);
         const before = adapter.cleanupSnapshot();
@@ -100,6 +101,7 @@
         onProgress({ removed, total: plan.removals.length, seconds: targets.at(-1).seconds });
         onStage({ phase: "checking", points: [] });
       }
+      if (checkpoint) await checkpoint({ signal });
       signal?.throwIfAborted();
       onStage({ phase: "verifying", points: [] });
       if (adapter.verifyCleanup) await adapter.verifyCleanup(expected, { signal });
@@ -107,6 +109,7 @@
       return { removed };
     }
     for (const target of plan.removals) {
+      if (checkpoint) await checkpoint({ signal });
       signal?.throwIfAborted();
       const before = adapter.cleanupSnapshot();
       const beforeCount = before.rows.length;
@@ -129,6 +132,7 @@
       onProgress({ removed, total: plan.removals.length, seconds: target.seconds });
       onStage({ phase: "checking", points: [] });
     }
+    if (checkpoint) await checkpoint({ signal });
     signal?.throwIfAborted();
     onStage({ phase: "verifying", points: [] });
     if (adapter.verifyCleanup) await adapter.verifyCleanup(expected, { signal });

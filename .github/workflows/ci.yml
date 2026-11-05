@@ -33,3 +33,5 @@ jobs:
         run: npm run test:ui
       - name: Check error dialogs and recovery
         run: npm run test:alerts
+      - name: Check startup errors and recovery
+        run: npm run test:startup

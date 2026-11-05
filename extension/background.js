@@ -62,7 +62,7 @@ async function openPanel() {
     });
     if (opened[0]?.result !== true) await chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      files: ["planner.js", "cleanup.js", "wait.js", "studio.js", "runner.js", "background-client.js", "error-copy.js", "run-alerts.js", "content.js"]
+      files: ["planner.js", "cleanup.js", "wait.js", "studio.js", "runner.js", "run-control.js", "background-client.js", "error-copy.js", "run-alerts.js", "content.js"]
     });
     await runAlerts.restore(tab.id, url.pathname.split("/")[2]);
     return { ok: true };

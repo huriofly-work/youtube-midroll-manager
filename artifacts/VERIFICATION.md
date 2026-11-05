@@ -1,3 +1,40 @@
+# Nghiệm thu Studio bản 0.1.21 — 05/11/2026
+
+Người dùng tự nghiệm thu trên YouTube Studio đã đăng nhập, với video thử, trên nhánh `release/0.1.21` (HEAD `f571481`). Người dùng báo **đạt cả 7 bước**:
+
+1. Chuẩn bị: Tải lại extension, F5 Studio, bảng hiện v0.1.21.
+2. Xem trước: thời lượng đúng, số mốc dự kiến hợp lý, không còn lỗi `TypeError ... 'create'`.
+3. Chèn: Tạm dừng dừng ở ranh giới đã xác nhận, câu trạng thái hiện một lần, Tiếp tục chạy tiếp đúng chỗ. Nút Tạm dừng bị khóa khi xong. Mốc cũ còn đủ, mốc mới đúng vị trí trên timeline.
+4. Dừng / Hủy lượt: chỉnh sửa chưa lưu vẫn còn, không tự hoàn tác.
+5. Lưu và mở lại: danh sách mốc khớp, quảng cáo tự động vẫn bật.
+6. Dọn: chỉ xóa điểm thủ công (Đang xem xét, có cảnh báo, trong đoạn đầu/cuối hoặc quá gần), giữ điểm tự động và chưa rõ loại. Tạm dừng/Tiếp tục đúng. Lưu, mở lại khớp.
+7. Tạm dừng hơn 1 phút khi tab bị ẩn hoặc Chrome thu nhỏ: không mất điểm, không xóa nhầm.
+
+Đây là kết quả người dùng báo lại; Claude không quan sát trực tiếp, không có ảnh hay số mốc cụ thể trong hồ sơ. Chưa xác nhận YouTube phân phát quảng cáo. `test:background`, `test:alerts-native` và ba benchmark chưa chạy lại.
+
+---
+
+# Kiểm chứng bản 0.1.21 — 25/10/2026
+
+Sửa lỗi khởi động im lặng tại `createRunControl`, tái hiện đúng TypeError trong ảnh người dùng. 271 kiểm tra cục bộ đạt, gồm 7 tình huống mới cho thiếu module/lỗi khởi tạo của cả Chèn và Dọn và cấu hình xem trước 302 điểm. 37 tệp JS/CJS qua kiểm tra cú pháp; Git whitespace đạt. ZIP 20 tệp khớp nguồn theo byte, 59.774 byte, SHA-256 `a54259a0febf00bffc3b798a36d1e05fcfe1f4046e779d6241435f29cce94638`. Chưa kiểm tra thao tác chèn/Lưu trên Studio đăng nhập của người dùng. Chi tiết và giới hạn ở [STARTUP-FIX-0.1.21.md](STARTUP-FIX-0.1.21.md).
+
+---
+
+# Kiểm chứng bản 0.1.20 — 15/10/2026
+
+Bổ sung Tạm dừng/Tiếp tục và Dừng / Hủy lượt cho cả chèn và dọn. Theo lựa chọn của người dùng, Dừng/Hủy giữ thay đổi chưa lưu để kiểm tra, không hoàn tác.
+
+- 119 kiểm thử logic đạt, gồm 6 bài mới về ranh giới tạm dừng, nhiều lượt tiếp tục, hủy/mất kết nối, dọn từng điểm và theo nhóm, dữ liệu đổi khi tạm dừng và giải phóng listener.
+- 61 tình huống chèn, 38 dọn/margin, 7 popup, 16 giao diện và 23 hộp lỗi đạt trong Chrome với trang Studio cục bộ. 10 bài giao diện mới kiểm tra xác nhận điểm/nhóm hiện tại trước khi tạm dừng; tiếp tục không lặp; hủy giữ thay đổi; sửa điểm/cài đặt tự động/trạng thái xét duyệt khi tạm dừng; khởi động chậm; mất kết nối và chuyển video. Đã xem ảnh tạm dừng 320×568, hai nút không tràn hoặc bị khuất.
+- 5 tình huống Chrome thu nhỏ qua cầu API/CDP đạt (3 cũ, 2 mới): duy trì heartbeat khi tạm dừng, không chèn thêm điểm khi chờ; tiếp tục hoặc dừng giải phóng phiên và giữ cửa sổ thu nhỏ. Giữ điểm tự động/chưa rõ loại và không tự Lưu.
+- Tổng 269 kiểm thử đạt trong các bộ trên. Cú pháp 36 tệp JS/CJS, phiên bản và Git whitespace đạt. Đã kiểm tra cả hai đường nạp script (biểu tượng extension và khôi phục lỗi) có run-control.js. Quyền không đổi.
+- Bộ API thông báo Chrome thật chưa xác nhận lại: hai lần chạy bản harness hiện có dừng trước tình huống đầu tiên với `ReferenceError: chrome is not defined` ở Runtime.evaluate trong worker. Thử dùng ngữ cảnh worker của Playwright bị chờ; đã dừng thử nghiệm và giữ nguyên harness. Không tính bộ này vào số đạt, không suy ra API thông báo thật hoặc toast Windows đã được kiểm tra trong bản này.
+- ZIP 20 tệp, 58,846 byte; CRC và từng byte khớp nguồn. SHA-256: `1e1c53ea050ad07cb5e0bf4e7f0c75e764cb4912e1bc906efaa274784d72cb08`. Gói cục bộ, chưa phát hành GitHub.
+
+Chưa kiểm tra trên YouTube Studio đăng nhập, thao tác Lưu thật hay phân phát quảng cáo. Chỉ tạm dừng tại ranh giới đã xác nhận; nếu thao tác hiện tại lỗi thì lượt kết thúc và hiển thị lỗi. Dừng/Hủy ngắt ngay và có thể còn điểm/nhóm chưa xác nhận cần kiểm tra.
+
+---
+
 # Kiểm chứng bản 0.1.19 — 15/10/2026
 
 Hoàn thiện 5 điểm về thông báo: chống trùng khi đã xem hộp lỗi; đồng bộ Để sau/Escape giữa hộp và hệ thống; khôi phục lỗi/dấu ! sau F5; cảnh báo dừng còn nhóm chưa xác nhận; phân mức theo khả năng ảnh hưởng đến điểm.

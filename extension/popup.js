@@ -1,7 +1,7 @@
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const VERSION = globalThis.chrome?.runtime?.getManifest?.()?.version || "0.1.19";
+  const VERSION = globalThis.chrome?.runtime?.getManifest?.()?.version || "0.1.21";
   $("version").textContent = `v${VERSION}`;
   let revision = 0;
   let report = null;

@@ -133,6 +133,106 @@ const { chromium } = require('playwright');
       assert.equal(await ui('preview').isVisible(), true);
       assert.equal(await page.evaluate(() => fixture.saves), 0);
     });
+    const paused = () => page.waitForFunction(() => MidrollPanelHost.shadowRoot.getElementById('pause').textContent === 'Tiếp tục');
+    async function startInsertion() {
+      await fresh({ width: 320, height: 568 });
+      await page.evaluate(() => { fixture.delay = 300; });
+      await ui('read').click(); await ready(); await ui('start').click();
+      await page.waitForFunction(() => fixture.clicks === 1);
+      await ui('pause').click(); await paused();
+    }
+    async function startCleanup() {
+      await fresh();
+      await page.evaluate(() => {
+        document.getElementById('list').replaceChildren();
+        for (let i = 1; i <= 7; i++) {
+          const row = addRow(`${i}:00:00`, true); row.dataset.adType = 'manual';
+          const pending = document.createElement('span'); pending.textContent = 'Đang xem xét'; row.append(pending);
+          const old = row.querySelector('button'), button = old.cloneNode(true); old.replaceWith(button);
+          button.addEventListener('click', () => { fixture.deletes++; setTimeout(() => row.remove(), 100); });
+        }
+        const automatic = addRow('8:30:00', true); automatic.dataset.adType = 'automatic'; automatic.querySelector('input').readOnly = true;
+        addRow('9:30:00', true).dataset.adType = 'unknown';
+      });
+      await ui('tab-cleanup').click(); await ready(); await ui('cleanup-read').click(); await ready();
+      await ui('cleanup-start').click();
+      await page.waitForFunction(() => fixture.deletes > 0);
+      await ui('pause').click(); await paused();
+    }
+    await scenario('pause confirms the current insertion, stays still and resumes repeatedly without duplicates in a narrow window', async () => {
+      await startInsertion(); await layout();
+      assert.equal(await page.evaluate(() => fixture.clicks), 1);
+      assert.equal(await ui('progress').getAttribute('value'), '1');
+      assert.equal(await ui('stop').isEnabled(), true);
+      await page.waitForTimeout(500); assert.equal(await page.evaluate(() => fixture.clicks), 1);
+      await page.locator('#midroll-helper-host').screenshot({ path: path.join(root, `artifacts/ui-paused-320x568-v${version}.png`) });
+      await ui('pause').click(); await page.waitForFunction(() => fixture.clicks === 2);
+      await ui('pause').click(); await paused();
+      assert.equal(await page.evaluate(() => fixture.clicks), 2);
+      await ui('pause').click(); await done();
+      assert.equal(await ui('status').getAttribute('data-tone'), 'success');
+      const values = await page.locator('.ad-row input').evaluateAll((nodes) => nodes.map((n) => n.value));
+      assert.deepEqual(values, ['0:20:00', '3:00:00', '9:40:00', '1:00:00', '5:00:00', '7:00:00', '9:00:00']);
+      assert.deepEqual(await page.evaluate(() => [fixture.clicks, fixture.deletes, fixture.saves]), [4, 0, 0]);
+    });
+    await scenario('stop while paused preserves unsaved additions and releases the background session', async () => {
+      await startInsertion(); await ui('stop').click(); await done(); await page.waitForTimeout(500);
+      assert.match(await ui('status').innerText(), /Đã dừng theo yêu cầu/);
+      assert.deepEqual(await page.evaluate(() => [fixture.clicks, fixture.saves, fixture.backgroundRunId]), [1, 0, null]);
+      assert.equal(await page.locator('.ad-row').count(), 4);
+      assert.equal(await ui('start').isDisabled(), true); assert.equal(await ui('run-actions').isVisible(), false);
+    });
+    for (const mutation of ['point', 'automatic']) {
+      await scenario(`resume rejects a changed ${mutation} before any further insertion`, async () => {
+        await startInsertion();
+        await page.evaluate((kind) => { if (kind === 'point') addRow('2:30:00', true); else document.getElementById('automatic').checked = false; }, mutation);
+        await ui('pause').click(); await done();
+        assert.match(await ui('status').innerText(), /thay đổi trong lúc tạm dừng/);
+        assert.equal(await page.evaluate(() => fixture.clicks), 1); assert.equal(await page.evaluate(() => fixture.saves), 0);
+      });
+    }
+    await scenario('pause requested during startup reaches the first boundary before any insertion', async () => {
+      await fresh();
+      await page.evaluate(() => { globalThis.alertMessage = async (message) => { if (message.type === 'MIDROLL_RUN_BEGIN') await new Promise((r) => setTimeout(r, 500)); return { ok: true }; }; });
+      await ui('read').click(); await ready(); await ui('start').click(); await ui('pause').click(); await paused();
+      assert.equal(await page.evaluate(() => fixture.clicks), 0);
+      await ui('pause').click(); await done();
+      assert.equal(await ui('status').getAttribute('data-tone'), 'success'); assert.equal(await page.evaluate(() => fixture.clicks), 4);
+    });
+    await scenario('background loss wakes a paused run and prevents continuation', async () => {
+      await startInsertion();
+      await page.evaluate(() => fixture.messageListener({ type: 'MIDROLL_BACKGROUND_LOST', runId: fixture.backgroundRunId, message: 'Chrome đã ngắt phiên chạy nền' }));
+      await done(); assert.match(await ui('status').innerText(), /Chrome đã ngắt/);
+      assert.deepEqual(await page.evaluate(() => [fixture.clicks, fixture.saves, fixture.backgroundRunId]), [1, 0, null]);
+    });
+    await scenario('navigation wakes a paused run without retaining a resumable plan', async () => {
+      await startInsertion();
+      await page.evaluate(() => { history.pushState({}, '', '/video/other/monetization'); document.body.append(document.createElement('div')); });
+      await done(); assert.equal(await ui('start').isDisabled(), true);
+      assert.deepEqual(await page.evaluate(() => [fixture.clicks, fixture.saves, fixture.backgroundRunId]), [1, 0, null]);
+    });
+    await scenario('cleanup pause finishes only the current group, resumes the remainder and protects automatic and unknown points', async () => {
+      await startCleanup();
+      assert.equal(await page.evaluate(() => fixture.deletes), 5); assert.equal(await ui('progress').getAttribute('value'), '5');
+      await page.waitForTimeout(500); assert.equal(await page.evaluate(() => fixture.deletes), 5);
+      await ui('pause').click(); await done();
+      assert.equal(await ui('status').getAttribute('data-tone'), 'success');
+      assert.deepEqual(await page.locator('.ad-row input').evaluateAll((nodes) => nodes.map((n) => n.value)), ['8:30:00', '9:30:00']);
+      assert.deepEqual(await page.evaluate(() => [fixture.deletes, fixture.saves]), [7, 0]);
+    });
+    await scenario('cleanup cancellation while paused keeps confirmed deletions without deleting the next group', async () => {
+      await startCleanup(); await ui('stop').click(); await done(); await page.waitForTimeout(500);
+      assert.match(await ui('status').innerText(), /Đã dừng theo yêu cầu/);
+      assert.deepEqual(await page.evaluate(() => [fixture.deletes, fixture.saves, fixture.backgroundRunId]), [5, 0, null]);
+      assert.equal(await page.locator('.ad-row').count(), 4);
+    });
+    await scenario('cleanup resume rejects changed manual review status before deleting the next group', async () => {
+      await startCleanup();
+      await page.evaluate(() => { document.querySelector('.ad-row span:last-child').textContent = 'Điểm phù hợp'; });
+      await ui('pause').click(); await done();
+      assert.match(await ui('status').innerText(), /thay đổi trong lúc tạm dừng/);
+      assert.deepEqual(await page.evaluate(() => [fixture.deletes, fixture.saves]), [5, 0]);
+    });
     assert.deepEqual(errors, []);
     console.log(`${passed} local UI scenarios passed. Signed-in Studio acceptance is not covered.`);
   } finally { await browser.close(); await new Promise((resolve) => server.close(resolve)); }

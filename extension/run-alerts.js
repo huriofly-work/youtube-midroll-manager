@@ -153,7 +153,7 @@
       try { response = await api.tabs.sendMessage(record.tabId, message); }
       catch {
         await target(record);
-        await api.scripting.executeScript({ target: { tabId: record.tabId }, files: ["planner.js", "cleanup.js", "wait.js", "studio.js", "runner.js", "background-client.js", "error-copy.js", "run-alerts.js", "content.js"] });
+        await api.scripting.executeScript({ target: { tabId: record.tabId }, files: ["planner.js", "cleanup.js", "wait.js", "studio.js", "runner.js", "run-control.js", "background-client.js", "error-copy.js", "run-alerts.js", "content.js"] });
         await target(record);
         response = await api.tabs.sendMessage(record.tabId, message);
       }

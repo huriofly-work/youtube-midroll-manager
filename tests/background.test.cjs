@@ -31,7 +31,7 @@ test('popup opens bundled panel scripts in dependency order only on the active S
   const f = background();
   await f.click({ id: 7, url: 'https://studio.youtube.com/video/test123/monetization' });
   const injection = f.calls.find(([name, details]) => name === 'inject' && details.files)[1];
-  assert.deepEqual(Array.from(injection.files), ['planner.js', 'cleanup.js', 'wait.js', 'studio.js', 'runner.js', 'background-client.js', 'error-copy.js', 'run-alerts.js', 'content.js']);
+  assert.deepEqual(Array.from(injection.files), ['planner.js', 'cleanup.js', 'wait.js', 'studio.js', 'runner.js', 'run-control.js', 'background-client.js', 'error-copy.js', 'run-alerts.js', 'content.js']);
   assert.equal(injection.target.tabId, 7);
   assert.deepEqual(JSON.parse(JSON.stringify(f.calls.find(([name]) => name === 'query')[1])), { active: true, currentWindow: true });
   assert.equal(f.calls.filter(([name]) => name === 'inject').length, 2);
@@ -70,7 +70,7 @@ test('manifest declares the required background debugger transport and no broad 
   assert.equal(manifest.optional_permissions, undefined);
   assert.equal(manifest.host_permissions, undefined);
   assert.equal(manifest.action.default_popup, 'popup.html');
-  const assets = [manifest.background.service_worker, 'background-session.js', 'background-client.js', 'duration-reader.js', 'playhead-controller.js', 'planner.js', 'wait.js', 'studio.js', 'runner.js', 'content.js', 'error-copy.js', 'run-alerts.js', 'alert-icon.png', 'popup.html', 'popup.js', 'popup.css'];
+  const assets = [manifest.background.service_worker, 'background-session.js', 'background-client.js', 'duration-reader.js', 'playhead-controller.js', 'planner.js', 'wait.js', 'studio.js', 'runner.js', 'run-control.js', 'content.js', 'error-copy.js', 'run-alerts.js', 'alert-icon.png', 'popup.html', 'popup.js', 'popup.css'];
   for (const asset of assets) assert.ok(fs.existsSync(path.join(__dirname, '../extension', asset)));
 });
 test('duration request reads MAIN in the sender tab and returns a minimal result', async () => {

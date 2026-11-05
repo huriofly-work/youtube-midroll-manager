@@ -112,6 +112,12 @@ test('a notification can restore its readonly error UI after reloading the same 
   const f = fixture({ reload: true }); await f.begin(); await f.error(); await f.manager.open(f.data.midrollRunAlerts[7].notificationId);
   assert.equal(f.calls.filter((c) => c[0] === 'inject').length, 1);
   assert.equal(f.data.midrollRunAlerts[7].acknowledged, undefined);
+  // The recovery path must inject the same ordered bundle as the popup path,
+  // or a reopened panel reports run-control-unavailable on the next run.
+  const injected = Array.from(f.calls.find((c) => c[0] === 'inject')[1].files);
+  const popup = JSON.parse(require('node:fs').readFileSync(require('node:path').join(__dirname, '../extension/background.js'), 'utf8').match(/files: (\[[^\]]*"content\.js"\])/)[1]);
+  assert.deepEqual(injected, popup);
+  assert.ok(injected.includes('run-control.js') && injected.indexOf('run-control.js') < injected.indexOf('content.js'));
 });
 test('issue fields distinguish processing uncertainty from confirmed totals without private URLs', () => {
   const detail = issue(Object.assign(Error('Chưa xác nhận'), { pendingRemoved: 3 }), { runId: id, mode: 'cleanup', confirmed: 5, total: 12, phase: 'processing', points: [60,120] });

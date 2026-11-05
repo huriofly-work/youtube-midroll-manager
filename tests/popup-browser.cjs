@@ -47,7 +47,7 @@ const { chromium } = require('playwright');
       assert.equal(await page.locator('a').getAttribute('href'), 'https://studio.youtube.com/');
       assert.deepEqual(await page.evaluate(() => fixture.messages), [{ type: 'MIDROLL_OPEN_PANEL' }]);
       await fs.mkdir(path.join(root, 'artifacts'), { recursive: true });
-      await page.screenshot({ path: path.join(root, 'artifacts/popup-preview.png') });
+      await page.screenshot({ path: path.join(root, `artifacts/popup-preview-v${version}.png`) });
       await page.screenshot({ path: path.join(root, `artifacts/popup-guidance-v${version}.png`) });
       assert.equal(await page.evaluate(() => document.body.getBoundingClientRect().width), 460);
       assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);

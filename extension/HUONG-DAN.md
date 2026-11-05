@@ -1,4 +1,4 @@
-# Chèn và dọn điểm quảng cáo YouTube — 0.1.19
+# Chèn và dọn điểm quảng cáo YouTube — 0.1.21
 
 Dành cho Chrome từ 118, YouTube Studio tiếng Việt, một video đang mở. Bạn xem lại và tự bấm Tiếp tục/Lưu. Không cần API key, OAuth hoặc cài Node.js.
 
@@ -7,7 +7,7 @@ Dành cho Chrome từ 118, YouTube Studio tiếng Việt, một video đang mở
 1. Giải nén ZIP vào một thư mục cố định, có `manifest.json` ngay bên trong.
 2. Mở `chrome://extensions`, bật **Chế độ dành cho nhà phát triển**, chọn **Tải tiện ích đã giải nén**, rồi chọn thư mục đó.
 3. Khi cập nhật, thay tệp trong đúng thư mục đã cài và bấm **Tải lại** extension. Nếu cài từ thư mục mã nguồn `extension`, chỉ cần Tải lại.
-4. Lưu các chỉnh sửa Studio muốn giữ trước khi F5 trang. Mở lại trình quảng cáo và kiểm tra bảng có **v0.1.19**.
+4. Lưu các chỉnh sửa Studio muốn giữ trước khi F5 trang. Mở lại trình quảng cáo và kiểm tra bảng có **v0.1.21**.
 
 Extension cần quyền debugger để giữ riêng tab Studio hoạt động khi bạn dùng ứng dụng khác. Chrome hiện thanh thông báo trong lúc chạy; phiên kết thúc khi xong, dừng hoặc gặp lỗi. Chấp nhận quyền/bật lại extension nếu Chrome yêu cầu.
 
@@ -47,7 +47,10 @@ Tool vẫn bấm xóa riêng từng điểm. Khi Studio cập nhật ngay, nhi�
 
 - Các ô đều nhập số giây; dòng dưới ô quy đổi sang phút/giờ để đối chiếu. Ô sai hiển thị viền đỏ và hướng dẫn sửa.
 - Tab và thanh nút luôn hiện khi cuộn nội dung. Nút chạy ghi số điểm từ kế hoạch mới nhất; phải xem trước trước khi chạy.
-- Khi chạy, thanh tiến độ chỉ đếm điểm đã xác nhận. Bạn có thể dùng ứng dụng khác; nút **Dừng** vẫn nằm ở cuối bảng.
+- Khi chạy, thanh tiến độ chỉ đếm điểm đã xác nhận. Các nút **Tạm dừng / Tiếp tục** và **Dừng / Hủy lượt** luôn nằm ở cuối bảng, áp dụng cho cả chèn và dọn.
+- **Tạm dừng**: chờ xác nhận xong điểm chèn hoặc nhóm dọn đang xử lý (tối đa 5 điểm), rồi hiện **Đã tạm dừng**. Trong lúc **Đang tạm dừng…**, thao tác hiện tại vẫn đang được xác nhận. Nếu thao tác gặp lỗi, tiện ích dừng và báo lỗi.
+- **Tiếp tục**: kiểm tra lại video, trình quảng cáo, danh sách và cài đặt quảng cáo tự động, rồi làm phần còn lại của cùng lượt chạy. Nếu dữ liệu liên quan đã đổi, tiện ích kết thúc lượt và yêu cầu Xem trước lại. Giữ nguyên video/trình quảng cáo và tránh sửa điểm trong lúc tạm dừng.
+- **Dừng / Hủy lượt**: ngắt lượt ngay, dùng được cả khi đang chờ tạm dừng hoặc đã tạm dừng. Giữ các thay đổi chưa lưu để bạn kiểm tra, không hoàn tác điểm đã thêm/xóa. Điểm/nhóm đang xử lý có thể chưa được xác nhận. Muốn chạy lại phải Xem trước mới.
 - Sau chạy hoặc dừng/lỗi, phần **Kế hoạch lần chạy vừa rồi** dùng để đối chiếu, không phải danh sách kết quả đã xác nhận. Đọc thông báo số điểm đã xác nhận và kiểm tra thực tế trong Studio. Bấm Xem trước lại để chạy tiếp.
 - Ví dụ dọn với khoảng cách tối thiểu 120 giây: điểm thủ công 02:01 bị chọn xóa nếu có điểm tự động 03:00, vì chỉ cách 59 giây. Hai đoạn đầu/cuối không thay thế quy tắc khoảng cách.
 
@@ -55,9 +58,11 @@ Tool vẫn bấm xóa riêng từng điểm. Khi Studio cập nhật ngay, nhi�
 
 **Xem trước** ở cả hai tab đều tự đọc lại dữ liệu, nên thường không cần bấm Tải lại trước đó. Dùng **Tải lại dữ liệu** khi bạn chỉ muốn kiểm tra thời lượng và trạng thái mới; nút này không tải lại trang, không yêu cầu YouTube đánh giá lại và không thay đổi điểm nào. Chuyển tab giữ cài đặt, bỏ kế hoạch cũ và đọc dữ liệu cho chức năng mới.
 
-Sau khi bắt đầu, có thể dùng ứng dụng khác hoặc thu nhỏ Chrome. Máy phải còn thức, Chrome phải chạy, video và trình quảng cáo phải giữ nguyên. Khi chạy bình thường, extension không đưa Chrome lên trước hoặc chiếm chuột/bàn phím. Không đóng/chuyển video, mở DevTools của tab đó hoặc bấm Hủy trên thanh điều khiển Chrome trong lúc chạy. Dùng nút **Dừng** để dừng bình thường.
+Sau khi bắt đầu, có thể dùng ứng dụng khác hoặc thu nhỏ Chrome. Máy phải còn thức, Chrome phải chạy, video và trình quảng cáo phải giữ nguyên. Khi chạy hoặc tạm dừng, phiên chạy nền vẫn được duy trì. Mất kết nối hoặc chuyển video sẽ kết thúc lượt, không tự tiếp tục. Khi chạy bình thường, extension không đưa Chrome lên trước hoặc chiếm chuột/bàn phím. Không đóng/chuyển video, mở DevTools của tab đó hoặc bấm Hủy trên thanh điều khiển Chrome trong lúc chạy. Dùng **Tạm dừng** để chờ rồi tiếp tục, hoặc **Dừng / Hủy lượt** để kết thúc.
 
 ## Khi bị dừng hoặc gặp lỗi
+
+Nếu bản cũ bấm **Chèn điểm/Dọn điểm** nhưng không có phản hồi, hoặc trang quản lý extension ghi `Cannot read properties of undefined (reading 'create')`: cập nhật lên 0.1.21, bấm **Tải lại** tại `chrome://extensions`, rồi F5 Studio sau khi kiểm tra các chỉnh sửa muốn giữ. Mở lại bảng và kiểm tra **v0.1.21**, sau đó Xem trước lại. Chỉ mở lại biểu tượng hoặc thay tệp chưa thay được mã cũ đang nằm trong bộ nhớ. Bản 0.1.21 bắt lỗi cả giai đoạn khởi động, báo khi thiếu thành phần điều khiển và mở lại các nút để bạn xử lý.
 
 Hộp lỗi ghi nguyên nhân, số điểm **đã xác nhận** và điểm/nhóm cuối còn cần kiểm tra; điểm đã bấm xóa nhưng chưa xác nhận được ghi riêng. Chương trình phân mức theo khả năng ảnh hưởng đến danh sách:
 

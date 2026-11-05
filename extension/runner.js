@@ -1,6 +1,6 @@
 (function (root) {
   "use strict";
-  async function runPlan(adapter, plan, { signal, onProgress = () => {}, onWaiting = () => {}, onStage = () => {} } = {}) {
+  async function runPlan(adapter, plan, { signal, checkpoint, onProgress = () => {}, onWaiting = () => {}, onStage = () => {} } = {}) {
     onStage({ phase: "checking", points: [] });
     let inserted = 0;
     let skipped = 0;
@@ -11,6 +11,7 @@
     };
     if (baseline.fingerprint !== plan.fingerprint) throw Object.assign(new Error("Video hoặc danh sách quảng cáo đã đổi. Hãy bấm Xem trước lại."), { code: "snapshot-changed" });
     for (const seconds of plan.additions) {
+      if (checkpoint) await checkpoint({ signal });
       signal?.throwIfAborted();
       const before = adapter.snapshot();
       checkAutomatic(before);
@@ -37,6 +38,7 @@
       onProgress({ inserted, skipped, total: plan.additions.length, seconds });
       onStage({ phase: "checking", points: [] });
     }
+    if (checkpoint) await checkpoint({ signal });
     signal?.throwIfAborted();
     onStage({ phase: "verifying", points: [] });
     if (adapter.verifyPlan) await adapter.verifyPlan(plan, { signal, onWaiting: (message) => onWaiting({ inserted, total: plan.additions.length, message }) });

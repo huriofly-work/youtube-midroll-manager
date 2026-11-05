@@ -1,6 +1,6 @@
 {
   "name": "youtube-manual-midroll-helper",
-  "version": "0.1.19",
+  "version": "0.1.21",
   "private": true,
   "description": "Chrome extension for manual mid-roll placement in YouTube Studio",
   "scripts": {
@@ -10,6 +10,7 @@
     "test:performance": "node tests/performance.cjs",
     "test:popup": "node tests/popup-browser.cjs",
     "test:ui": "node tests/ui-browser.cjs",
+    "test:startup": "node tests/startup-browser.cjs",
     "test:alerts": "node tests/alerts-browser.cjs",
     "test:alerts-native": "node tests/alerts-native.cjs",
     "test:cleanup": "node tests/cleanup-browser.cjs",
