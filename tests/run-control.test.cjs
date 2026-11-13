@@ -89,7 +89,7 @@ test('single and grouped cleanup pause at confirmed boundaries and keep counts a
   }
 });
 
-// Added by /ship Fix-First for the untested state-matrix cells (Claude Opus 5.5).
+// Covers the state-matrix cells that were previously untested.
 // Value: protects=a paused single or grouped cleanup that is stopped, loses its background session, navigates away or sees Studio change deletes nothing more and never verifies; fails_when=checkpoint stops honouring the abort reason or the resume fingerprint check in either cleanup path; why_new=the matrix covered these actions for insert only; seam=none; no_claim=real abort sources and Studio DOM (in-memory adapter; unit only)
 test('paused cleanup ends on stop, session loss, navigation or changed Studio data without deleting more', async () => {
   const lost = new Error('Mất phiên chạy nền'), left = new Error('Tab Studio đã đóng hoặc chuyển trang. Đã dừng chèn.');
