@@ -2,6 +2,7 @@ name: Local fixture checks
 
 on:
   push:
+    branches: [main]
   pull_request:
   workflow_dispatch:
 
@@ -14,24 +15,57 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      # Filter at step level so the required `checks` job still reports success
+      # on docs-only pull requests instead of staying pending.
+      - name: Detect docs-only pull requests
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT" != "pull_request" ]; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          changed=$(git diff --name-only "$BASE...$HEAD")
+          printf '%s\n' "$changed"
+          if printf '%s\n' "$changed" | grep -qvE '(\.md$|^docs/)'; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+            echo "Only documentation changed; skipping install and tests."
+          fi
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: steps.scope.outputs.code == 'true'
         with:
           node-version: '24'
       - name: Install test dependencies
+        if: steps.scope.outputs.code == 'true'
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Install isolated browser
+        if: steps.scope.outputs.code == 'true'
         run: npx playwright install --with-deps chromium
       - name: Check algorithms and lifecycle
+        if: steps.scope.outputs.code == 'true'
         run: npm test
       - name: Check insertion fixtures
+        if: steps.scope.outputs.code == 'true'
         run: npm run test:browser
       - name: Check cleanup fixtures
+        if: steps.scope.outputs.code == 'true'
         run: npm run test:cleanup
       - name: Check popup fixtures
+        if: steps.scope.outputs.code == 'true'
         run: npm run test:popup
       - name: Check layout and UI interactions
+        if: steps.scope.outputs.code == 'true'
         run: npm run test:ui
       - name: Check error dialogs and recovery
+        if: steps.scope.outputs.code == 'true'
         run: npm run test:alerts
       - name: Check startup errors and recovery
+        if: steps.scope.outputs.code == 'true'
         run: npm run test:startup

@@ -1,6 +1,6 @@
 # Lịch sử thay đổi
 
-Chưa phát hành: repo chuyển sang public. Thêm SECURITY.md, ghi rõ chưa cấp phép sử dụng lại, cập nhật README và tài liệu bàn giao. Làm mới trạng thái, mã commit và thứ tự tiếp tục trong tài liệu bàn giao; cài đặt Claude Code riêng của máy không còn nằm trong Git. Thêm `package-lock.json`; CI và README cài phụ thuộc test bằng `npm ci`. Không đổi mã extension.
+Chưa phát hành: repo chuyển sang public. Thêm SECURITY.md, ghi rõ chưa cấp phép sử dụng lại, cập nhật README và tài liệu bàn giao. Làm mới trạng thái, mã commit và thứ tự tiếp tục trong tài liệu bàn giao; cài đặt Claude Code riêng của máy không còn nằm trong Git. Thêm `package-lock.json`; CI và README cài phụ thuộc test bằng `npm ci`. CI không chạy lại khi push lên branch đã có PR và bỏ qua test khi PR chỉ sửa tài liệu. Không đổi mã extension.
 
 0.1.21 sửa lỗi khởi động khiến bấm Chèn/Dọn không phản hồi khi thành phần Tạm dừng/Tiếp tục chưa được nạp. Tạo mã lượt, AbortController và bộ điều khiển đều nằm trong khối bắt lỗi; mọi lỗi khởi động giải phóng cờ chạy, hủy kế hoạch cũ và hiển thị thông báo. Thiếu thành phần điều khiển có hướng dẫn Tải lại extension và làm mới Studio. Lỗi xảy ra trước khi tạo mã lượt vẫn hiện hộp cục bộ, không gửi mã lỗi rỗng tới background. Thêm 7 tình huống hồi quy cho cả hai chức năng và cấu hình 302 điểm trong ảnh báo lỗi. Quyền và thao tác tự Lưu giữ nguyên.
 
