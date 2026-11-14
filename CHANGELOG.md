@@ -1,5 +1,7 @@
 # Lịch sử thay đổi
 
+Chưa phát hành: repo chuyển sang public. Thêm SECURITY.md, ghi rõ chưa cấp phép sử dụng lại, cập nhật README và tài liệu bàn giao. Không đổi mã extension.
+
 0.1.21 sửa lỗi khởi động khiến bấm Chèn/Dọn không phản hồi khi thành phần Tạm dừng/Tiếp tục chưa được nạp. Tạo mã lượt, AbortController và bộ điều khiển đều nằm trong khối bắt lỗi; mọi lỗi khởi động giải phóng cờ chạy, hủy kế hoạch cũ và hiển thị thông báo. Thiếu thành phần điều khiển có hướng dẫn Tải lại extension và làm mới Studio. Lỗi xảy ra trước khi tạo mã lượt vẫn hiện hộp cục bộ, không gửi mã lỗi rỗng tới background. Thêm 7 tình huống hồi quy cho cả hai chức năng và cấu hình 302 điểm trong ảnh báo lỗi. Quyền và thao tác tự Lưu giữ nguyên.
 
 0.1.20 thêm Tạm dừng/Tiếp tục và làm rõ Dừng / Hủy lượt cho cả chèn và dọn điểm. Tạm dừng chờ xác nhận xong điểm chèn hoặc nhóm dọn hiện tại (tối đa 5 điểm); tiếp tục kiểm tra lại dữ liệu tại thời điểm tạm dừng trước khi xử lý phần còn lại. Dữ liệu liên quan thay đổi sẽ kết thúc lượt và yêu cầu Xem trước mới. Dừng / Hủy lượt ngắt ngay kể cả lúc tạm dừng, giữ thay đổi chưa lưu để kiểm tra. Không hoàn tác hay tự Lưu. Tiến độ và trạng thái điều khiển luôn hiện ở thanh nút; duy trì phiên chạy nền khi tạm dừng, giải phóng khi dừng hoặc mất kết nối. Quyền giữ nguyên.

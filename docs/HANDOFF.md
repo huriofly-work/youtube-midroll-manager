@@ -1,12 +1,14 @@
 # Bàn giao kỹ thuật cho Claude Code
 
-Cập nhật ngày 05/11/2026. Dùng trực tiếp workspace `F:\Tools\Tự động chèn quảng cáo` để tiếp tục bản **0.1.21**. Toàn bộ 0.1.20–0.1.21 đã commit trên nhánh `release/0.1.21`, có [PR #1](https://github.com/huriofly-work/youtube-midroll-manager/pull/1) vào `main` (CI đạt), chưa merge. Người dùng đã nghiệm thu trên Studio đăng nhập ngày 05/11/2026 và báo đạt.
+Cập nhật ngày 14/11/2026. Làm việc tại thư mục gốc của repo, bản hiện tại là **0.1.21**: đã merge vào `main` và phát hành trên GitHub Releases. Người dùng đã nghiệm thu trên Studio đăng nhập ngày 05/11/2026 và báo đạt.
+
+Ngày 14/11/2026 repo chuyển sang public. Lịch sử được viết lại để mọi commit dùng email noreply, nên `v0.1.21` và các commit sau đổi SHA; nội dung tệp không đổi. Repo cũ đổi tên thành `youtube-midroll-manager-archive` (private) và chỉ giữ tạm để tra cứu PR #1, #2. Release được tạo lại trên repo mới với tệp đính kèm khớp SHA256.
 
 ## Trạng thái Git và tệp cần giữ
 
-- Worktree chính và duy nhất là `F:\Tools\Tự động chèn quảng cáo`, Git dir `.git`. Nhánh `release/0.1.21` tách từ `main` tại `9ac904d` (tag `v0.1.19`), gồm commit `3244202` (0.1.20 và 0.1.21), `e3032aa` (quy tắc định tuyến skill trong CLAUDE.md, đã gỡ sau đó), `51905ff` (sửa sau rà soát: khóa Tạm dừng khi tác vụ kết thúc, tách câu trạng thái, thêm kiểm thử dọn khi tạm dừng) `d29e58c` (theo dõi rà soát cho README, HANDOFF và kiểm thử), `0f46f46` (đồng bộ tài liệu), `0207511` (CHANGELOG và TODOS) và `f571481` (fixture ghi ảnh theo tên có phiên bản). [Remote GitHub](https://github.com/huriofly-work/youtube-midroll-manager)
+- Làm việc trên một worktree, Git dir `.git`, theo GitHub Flow: branch từ `main` mới nhất, PR, squash merge. Bản 0.1.20–0.1.21 được squash vào `main` thành commit `f104e3f` (tag `v0.1.21`); các commit lẻ của nhánh `release/0.1.21` chỉ còn ở repo lưu trữ. [Remote GitHub](https://github.com/huriofly-work/youtube-midroll-manager)
 - `extension/run-control.js` (mã chạy thật), `tests/run-control.test.cjs`, `tests/startup-browser.cjs`, `artifacts/STARTUP-FIX-0.1.21.md` và ảnh v0.1.20/v0.1.21 trong `artifacts/` đều đã được Git theo dõi. Trước khi sửa, đối chiếu bằng `git status --short --branch` và `git log --oneline main..HEAD`.
-- `release/Chen-quang-cao-YouTube-v0.1.21.zip`, log kiểm thử và `.publish/` là dữ liệu cục bộ bị ignore. Ba ZIP 0.1.6, 0.1.10 và 0.1.13 được track để đo đối chứng. README đã trỏ sang tài khoản `huriofly-work` sau đợt chuyển repo. Theo hồ sơ trước, v0.1.19 đã phát hành riêng tư và v0.1.20–0.1.21 chỉ đóng gói cục bộ. Ngày 05/11/2026 `gh` truy cập được repo: nhánh đã push, PR #1 mở và CI GitHub đạt trên `f571481`. Release GitHub của 0.1.21 chưa tạo.
+- `release/Chen-quang-cao-YouTube-v0.1.21.zip`, log kiểm thử và `.publish/` là dữ liệu cục bộ bị ignore. Ba ZIP 0.1.6, 0.1.10 và 0.1.13 được track để đo đối chứng. README trỏ sang tài khoản `huriofly-work`. ZIP mỗi bản phát hành đính kèm GitHub Release (public) cùng tệp SHA256SUMS, không commit vào Git.
 
 ## Sản phẩm và kiến trúc
 
