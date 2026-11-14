@@ -10,15 +10,15 @@ Khi lượt chèn/dọn gặp lỗi, hộp xử lý ghi nguyên nhân, số đi�
 
 ## Tải bản cài
 
-Bản 0.1.21 mới được đóng gói cục bộ thành `release/Chen-quang-cao-YouTube-v0.1.21.zip` trên máy phát triển (thư mục `release/` không được đưa lên Git) và chưa phát hành lên GitHub. Giải nén vào một thư mục cố định. Trong Chrome, mở `chrome://extensions`, bật **Chế độ dành cho nhà phát triển**, chọn **Tải tiện ích đã giải nén** rồi chọn thư mục có `manifest.json`. Các bản đã phát hành ở [GitHub Releases](https://github.com/huriofly-work/youtube-midroll-manager/releases/latest).
+Tải `Chen-quang-cao-YouTube-v0.1.21.zip` ở [GitHub Releases](https://github.com/huriofly-work/youtube-midroll-manager/releases/latest) và đối chiếu với tệp `SHA256SUMS` đi kèm. Giải nén vào một thư mục cố định. Trong Chrome, mở `chrome://extensions`, bật **Chế độ dành cho nhà phát triển**, chọn **Tải tiện ích đã giải nén** rồi chọn thư mục có `manifest.json`.
 
-Repository và bản phát hành là **riêng tư**, cần đăng nhập tài khoản được cấp quyền để tải. Đây là bản phát hành GitHub để cài thủ công. Khi cập nhật, lưu chỉnh sửa đang dở, thay tệp trong thư mục extension, bấm **Tải lại** extension rồi F5 Studio.
+Đây là bản phát hành GitHub để cài thủ công. Khi cập nhật, lưu chỉnh sửa đang dở, thay tệp trong thư mục extension, bấm **Tải lại** extension rồi F5 Studio.
 
 Bản 0.1.21 sửa trường hợp bấm Chèn/Dọn nhưng bảng im lặng khi thành phần điều khiển lượt chạy chưa được nạp. Mọi bước khởi động đều được bắt lỗi và giải phóng trạng thái chạy; lỗi hiện trong bảng với hướng dẫn cập nhật. Nếu bảng cũ đang bị kẹt, cần Tải lại extension và F5 Studio để thay mã đang nằm trong bộ nhớ.
 
 Mã đóng gói ở `extension/`, không cần build, API key, OAuth hoặc Node.js để dùng. ZIP ở `release/` có `manifest.json` ngay gốc. Quyền: activeTab, scripting, storage, debugger và **notifications** để báo lỗi khi bạn đang dùng ứng dụng khác. Bản 0.1.21 giữ nguyên quyền của 0.1.19. Khi cập nhật: chấp nhận quyền/bật lại nếu Chrome yêu cầu, Tải lại extension và F5 Studio sau khi lưu thay đổi muốn giữ.
 
-Các gói đã phát hành được đính kèm GitHub Releases; Git chỉ giữ ba ZIP cũ 0.1.6, 0.1.10 và 0.1.13 làm đầu vào đối chứng cho các bài đo hiệu năng. Gói 0.1.21 cục bộ chưa được đưa lên Releases.
+Các gói đã phát hành được đính kèm GitHub Releases; Git chỉ giữ ba ZIP cũ 0.1.6, 0.1.10 và 0.1.13 làm đầu vào đối chứng cho các bài đo hiệu năng.
 
 ## Kiểm thử cho người phát triển
 
@@ -50,3 +50,9 @@ $env:CHROME_TEST_PATH = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
 Không coi kiểm thử cục bộ là xác nhận Studio thật, YouTube đã lưu hoặc quảng cáo đã được phân phát.
 
 GitHub Actions chạy kiểm thử logic và sáu bộ fixture trình duyệt (chèn, dọn, popup, giao diện, hộp lỗi và khởi động) sau mỗi lần push/PR. Kiểm thử Chrome thu nhỏ, API thông báo thật và benchmark vẫn chạy riêng tại máy có môi trường phù hợp.
+
+## Bảo mật và bản quyền
+
+Báo lỗ hổng bảo mật theo [SECURITY.md](SECURITY.md), không mở Issue công khai.
+
+Mã nguồn được công khai để xem và tham khảo, chưa kèm giấy phép sử dụng lại. Mọi quyền được bảo lưu.
