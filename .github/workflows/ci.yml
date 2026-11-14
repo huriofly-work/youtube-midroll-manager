@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: '24'
       - name: Install test dependencies
-        run: npm install --ignore-scripts --no-audit --no-fund
+        run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Install isolated browser
         run: npx playwright install --with-deps chromium
       - name: Check algorithms and lifecycle
