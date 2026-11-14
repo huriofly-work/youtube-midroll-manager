@@ -22,10 +22,10 @@ Các gói đã phát hành được đính kèm GitHub Releases; Git chỉ giữ
 
 ## Kiểm thử cho người phát triển
 
-Node.js 20 trở lên, Playwright theo package.json. Các bài kiểm thử dùng hồ sơ tạm và trang cục bộ; không dùng tài khoản Chrome cá nhân.
+Node.js 24 (bản CI dùng). `npm ci` cài đúng phiên bản Playwright ghi trong `package-lock.json`. Các bài kiểm thử dùng hồ sơ tạm và trang cục bộ; không dùng tài khoản Chrome cá nhân.
 
 ```powershell
-npm install
+npm ci
 npx playwright install chromium
 npm test
 npm run test:browser
