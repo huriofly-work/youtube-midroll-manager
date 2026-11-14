@@ -2,11 +2,11 @@
 
 Cập nhật ngày 14/11/2026. Làm việc tại thư mục gốc của repo, bản hiện tại là **0.1.21**: đã merge vào `main` và phát hành trên GitHub Releases. Người dùng đã nghiệm thu trên Studio đăng nhập ngày 05/11/2026 và báo đạt.
 
-Ngày 14/11/2026 repo chuyển sang public. Lịch sử được viết lại để mọi commit dùng email noreply, nên `v0.1.21` và các commit sau đổi SHA; nội dung tệp không đổi. Repo cũ đổi tên thành `youtube-midroll-manager-archive` (private) và chỉ giữ tạm để tra cứu PR #1, #2. Release được tạo lại trên repo mới với tệp đính kèm khớp SHA256.
+Ngày 14/11/2026 repo chuyển sang public. Lịch sử được viết lại để mọi commit dùng email noreply, nên `v0.1.21` và các commit sau đổi SHA; nội dung tệp không đổi. Repo cũ cùng hai PR của nó đã bị xoá khỏi GitHub; PR của repo hiện tại đánh số lại từ #1. Release được tạo lại trên repo mới với tệp đính kèm khớp SHA256.
 
 ## Trạng thái Git và tệp cần giữ
 
-- Làm việc trên một worktree, Git dir `.git`, theo GitHub Flow: branch từ `main` mới nhất, PR, squash merge. Bản 0.1.20–0.1.21 được squash vào `main` thành commit `f104e3f` (tag `v0.1.21`); các commit lẻ của nhánh `release/0.1.21` chỉ còn ở repo lưu trữ. [Remote GitHub](https://github.com/huriofly-work/youtube-midroll-manager)
+- Làm việc trên một worktree, Git dir `.git`, theo GitHub Flow: branch từ `main` mới nhất, PR, squash merge bằng email noreply. Ruleset buộc `main` đi qua PR có CI `checks` xanh, cấm force-push/xoá, và cấm xoá hoặc dời tag `v*`. Bản 0.1.20–0.1.21 được squash vào `main` thành commit `f104e3f` (tag `v0.1.21`); các commit lẻ của nhánh `release/0.1.21` không còn trên GitHub. [Remote GitHub](https://github.com/huriofly-work/youtube-midroll-manager)
 - `extension/run-control.js` (mã chạy thật), `tests/run-control.test.cjs`, `tests/startup-browser.cjs`, `artifacts/STARTUP-FIX-0.1.21.md` và ảnh v0.1.20/v0.1.21 trong `artifacts/` đều đã được Git theo dõi. Trước khi sửa, đối chiếu bằng `git status --short --branch` và `git log --oneline main..HEAD`.
 - `release/Chen-quang-cao-YouTube-v0.1.21.zip`, log kiểm thử và `.publish/` là dữ liệu cục bộ bị ignore. Ba ZIP 0.1.6, 0.1.10 và 0.1.13 được track để đo đối chứng. README trỏ sang tài khoản `huriofly-work`. ZIP mỗi bản phát hành đính kèm GitHub Release (public) cùng tệp SHA256SUMS, không commit vào Git.
 
