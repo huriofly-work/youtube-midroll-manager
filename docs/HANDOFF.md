@@ -1,4 +1,4 @@
-# Bàn giao kỹ thuật cho Claude Code
+# Bàn giao kỹ thuật
 
 Cập nhật ngày 14/11/2026. Làm việc tại thư mục gốc của repo, bản hiện tại là **0.1.21**: đã merge vào `main` và phát hành trên GitHub Releases. Người dùng đã nghiệm thu trên Studio đăng nhập ngày 05/11/2026 và báo đạt.
 
@@ -9,7 +9,6 @@ Ngày 14/11/2026 repo chuyển sang public. Lịch sử được viết lại đ
 - Làm việc trực tiếp trong thư mục repo (không dùng worktree riêng), theo GitHub Flow: Issue, branch từ `main` mới nhất, PR có `Closes #số`, squash merge bằng email noreply. Ruleset buộc `main` đi qua PR có CI `checks` xanh, cấm force-push/xoá, và cấm xoá hoặc dời tag `v*`. Bản 0.1.20–0.1.21 được squash vào `main` thành commit `f104e3f` (tag `v0.1.21`); các commit lẻ của nhánh `release/0.1.21` không còn trên GitHub. [Remote GitHub](https://github.com/huriofly-work/youtube-midroll-manager)
 - `extension/run-control.js` (mã chạy thật), `tests/run-control.test.cjs`, `tests/startup-browser.cjs`, `artifacts/STARTUP-FIX-0.1.21.md` và ảnh v0.1.20/v0.1.21 trong `artifacts/` đều đã được Git theo dõi. Trước khi sửa, đối chiếu bằng `git status --short --branch` và `git log --oneline main..HEAD`.
 - `release/Chen-quang-cao-YouTube-v0.1.21.zip`, log kiểm thử và `.publish/` là dữ liệu cục bộ bị ignore. Ba ZIP 0.1.6, 0.1.10 và 0.1.13 được track để đo đối chứng. README trỏ sang tài khoản `huriofly-work`. ZIP mỗi bản phát hành đính kèm GitHub Release (public) cùng tệp SHA256SUMS, không commit vào Git.
-- `.claude/settings.local.json` là quyền Claude Code riêng của máy người dùng, bị ignore. Quy tắc dùng chung cho mọi người mới đặt ở `.claude/settings.json` và commit.
 
 ## Sản phẩm và kiến trúc
 
@@ -65,7 +64,7 @@ Biến test tùy chọn gồm `CHROME_TEST_PATH` để dùng Chrome cài sẵn, 
 
 ## Thứ tự tiếp tục đề xuất
 
-1. **Trước và sau mỗi thay đổi mã.** Đọc [AGENTS.md](../AGENTS.md), chạy lại lệnh Git ở trên, giữ mọi thay đổi chưa commit nếu có. Sau khi sửa, chạy suite logic và sáu suite fixture trên bản sao bảo toàn ảnh; đường cơ sở 0.1.21 là bảng trên. Khi đổi injection, kiểm hai đường nạp module chạy đúng, thiếu module báo lỗi ở cả Chèn/Dọn và cho Xem trước lại.
+1. **Trước và sau mỗi thay đổi mã.** Chạy lại lệnh Git ở trên, giữ mọi thay đổi chưa commit nếu có. Sau khi sửa, chạy suite logic và sáu suite fixture trên bản sao bảo toàn ảnh; đường cơ sở 0.1.21 là bảng trên. Khi đổi injection, kiểm hai đường nạp module chạy đúng, thiếu module báo lỗi ở cả Chèn/Dọn và cho Xem trước lại.
 2. **Nghiệm thu trên Studio đăng nhập cho mỗi bản mới.** Bản 0.1.21 đã đạt ngày 05/11/2026 theo báo cáo của người dùng. Dùng video thử, ghi lại danh sách trước và sau. Kiểm tra đọc đúng thời lượng, Chèn giữ mốc cũ, Dọn chỉ xóa đúng điểm thủ công đã xem trước, tạm dừng/tiếp tục và hủy đúng ranh giới. Người dùng tự Lưu rồi mở lại, đối chiếu mốc và cài đặt tự động. Thu dữ liệu chẩn đoán đã lược bỏ thông tin nhạy cảm nếu UI nhận diện sai. Theo dõi phân phát quảng cáo riêng với việc xác nhận các mốc đã lưu.
 3. **Kiểm chứng nền và thông báo.** Chạy hai suite desktop trên hồ sơ tạm, điều tra đúng ngữ cảnh CDP của worker nếu lỗi `chrome is not defined` tái phát. Tiêu chí xong là có kết quả từng ca, xác nhận cleanup CDP và Chrome đăng ký thông báo, ghi riêng việc quan sát toast Windows nếu có.
 4. **Phát hành sau mỗi bản mới.** Khi bản mới đã merge với CI xanh và nghiệm thu đạt, rà phạm vi diff, kiểm version, dựng ZIP mới từ `extension/` tại commit đã merge và đối chiếu từng tệp với nguồn. Tạo tag `vX.Y.Z` và GitHub Release kèm ZIP và SHA256SUMS sau khi người dùng đồng ý. Thay đổi chỉ ở tài liệu không cần phát hành.

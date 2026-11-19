@@ -41,7 +41,7 @@ const { chromium } = require('playwright');
   async function assertFailed(mode, message) {
     await page.waitForFunction(() => MidrollPanelHost.shadowRoot.getElementById('status').dataset.tone === 'error', null, { timeout: 3000 });
     assert.match(await ui('status').innerText(), message);
-    // Added by the ship coverage audit (Claude Opus 5.5).
+    // Added by the ship coverage audit.
     // Value: protects=a startup failure says no point was inserted/removed in this run; fails_when=the phase-starting status branch is dropped or inverted; why_new=scenarios matched only the error text; seam=none; no_claim=live Studio (local fixture)
     assert.match(await ui('status').innerText(), mode === 'insert' ? /Chưa chèn điểm nào trong lượt này/ : /Chưa xóa điểm nào trong lượt này/);
     assert.equal(await ui('run-alert').isVisible(), true);
