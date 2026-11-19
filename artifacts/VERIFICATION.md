@@ -10,7 +10,7 @@ Người dùng tự nghiệm thu trên YouTube Studio đã đăng nhập, với 
 6. Dọn: chỉ xóa điểm thủ công (Đang xem xét, có cảnh báo, trong đoạn đầu/cuối hoặc quá gần), giữ điểm tự động và chưa rõ loại. Tạm dừng/Tiếp tục đúng. Lưu, mở lại khớp.
 7. Tạm dừng hơn 1 phút khi tab bị ẩn hoặc Chrome thu nhỏ: không mất điểm, không xóa nhầm.
 
-Đây là kết quả người dùng báo lại; Claude không quan sát trực tiếp, không có ảnh hay số mốc cụ thể trong hồ sơ. Chưa xác nhận YouTube phân phát quảng cáo. `test:background`, `test:alerts-native` và ba benchmark chưa chạy lại.
+Đây là kết quả người dùng báo lại, không được quan sát trực tiếp; không có ảnh hay số mốc cụ thể trong hồ sơ. Chưa xác nhận YouTube phân phát quảng cáo. `test:background`, `test:alerts-native` và ba benchmark chưa chạy lại.
 
 ---
 

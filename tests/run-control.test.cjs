@@ -65,7 +65,7 @@ test('insertion pauses after a confirmed point, resumes twice without repeating 
   control.resume(); assert.deepEqual(await run, { inserted: 4, skipped: 0 });
 });
 
-// Rows pausing at the last removal were added by the ship coverage audit (Claude Opus 5.5).
+// Rows pausing at the last removal were added by the ship coverage audit.
 // Value: protects=cleanup pause after the last single/grouped removal holds before final verification; fails_when=the post-loop cleanup checkpoint is removed; why_new=existing rows paused only mid-run; seam=none; no_claim=Studio DOM timing (in-memory adapter; unit only)
 test('single and grouped cleanup pause at confirmed boundaries and keep counts and protected points on resume', async () => {
   for (const [grouped, pauseAt] of [[false, 1], [true, 5], [false, 7], [true, 7]]) {
